@@ -1,0 +1,27 @@
+//bentley ottmann
+https://github.com/anvaka/isect
+
+@article{mehlhorn1994implementation,
+  title={Implementation of a sweep line algorithm for the Straight$\backslash$\& Line Segment Intersection Problem},
+  author={Mehlhorn, Kurt and N{\"a}her, Stefan},
+  year={1994},
+  publisher={Max-Planck-Institut f{\"u}r Informatik}
+}
+
+//avl tree
+
+https://gist.github.com/yutopio/5643839
+
+
+//Math3d
+
+https://gist.github.com/jankolkmeier/8543156
+
+//line intersection
+
+https://stackoverflow.com/a/1968345/125351
+
+//aabb trees
+
+https://github.com/EmmetOT/BoundingVolumeHierarchy
+https://box2d.org/files/ErinCatto_DynamicBVH_GDC2019.pdf
