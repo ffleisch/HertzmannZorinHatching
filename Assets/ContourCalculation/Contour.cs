@@ -93,7 +93,7 @@ public class Contour : MonoBehaviour
 
 
 
-    private BentleyOttmann.BentleyOttman bo;
+    private AABBContourIntersection aabbIntersections;
 
 
     void Update()
@@ -174,7 +174,7 @@ public class Contour : MonoBehaviour
         Vector3 pos;
         Vector3 normal;
 
-        Vector2 screenPoint = bo.GraphNodes[point];
+        Vector2 screenPoint = aabbIntersections.GraphNodes[point];
         //merge lists starting in the same point (thats not an intersection)
 
 
@@ -225,8 +225,8 @@ public class Contour : MonoBehaviour
         //could be done faster on the gpu
         rawContourSegments = results.Where(x => x.containsSegment != 0).ToList();
 
-        bo = new(rawContourSegments.Cast<ISegment>());
-        bo.intersectSegments();
+        aabbIntersections = new(rawContourSegments.Cast<ISegment>());
+        //aabbIntersections.intersectSegments();
 
 
 
@@ -242,7 +242,7 @@ public class Contour : MonoBehaviour
         //keep a dictionary to track which lines are growing form the left
         //if a segments statrpoint is contained, remove it and add its endpoint and add it to the associated list
         //if two lists end in the same point (i.e. a crossing), instaed start a new list
-        foreach ((int s, int e, int ind) in bo.GraphEdges)
+        foreach ((int s, int e, int ind) in aabbIntersections.GraphEdges)
         {
             if (openLists.ContainsKey(s) && (!burned.Contains(s)))
             {
@@ -380,7 +380,7 @@ public class Contour : MonoBehaviour
             }
         }*/
 
-        if (bo != null)
+        if (aabbIntersections != null)
         {
             Matrix4x4 flatMatrix = Camera.main.cameraToWorldMatrix * Matrix4x4.Translate(-Vector3.forward) * Matrix4x4.Scale(new Vector3(1, Camera.main.pixelHeight / (float)Camera.main.pixelWidth, 1));
 
@@ -400,7 +400,7 @@ public class Contour : MonoBehaviour
                     //draw final line lists infront of the camera
                     if (firstLoop) { firstLoop = false; lastIndex = ind; continue; }
                     Handles.matrix = flatMatrix;
-                    Handles.DrawLine(bo.GraphNodes[lastIndex], bo.GraphNodes[ind], 2);
+                    Handles.DrawLine(aabbIntersections.GraphNodes[lastIndex], aabbIntersections.GraphNodes[ind], 2);
                     lastIndex = ind;
 
 
