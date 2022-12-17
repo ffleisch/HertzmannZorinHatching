@@ -4,6 +4,14 @@ using System.Linq;
 using UnityEditor;
 using UnityEngine;
 
+
+interface IIntersectionProvider
+{
+    public List<Vector2> GraphNodes { get;}
+	public List<(int, int, int)> GraphEdges { get;}//start index, end index, index of the originating segment
+
+}
+
 public class Contour : MonoBehaviour
 {
     struct ResultBufferStruct : ISegment
@@ -93,7 +101,7 @@ public class Contour : MonoBehaviour
 
 
 
-    private AABBContourIntersection aabbIntersections;
+    private IIntersectionProvider intersections;
 
 
     void Update()
@@ -174,7 +182,7 @@ public class Contour : MonoBehaviour
         Vector3 pos;
         Vector3 normal;
 
-        Vector2 screenPoint = aabbIntersections.GraphNodes[point];
+        Vector2 screenPoint = intersections.GraphNodes[point];
         //merge lists starting in the same point (thats not an intersection)
 
 
@@ -225,7 +233,8 @@ public class Contour : MonoBehaviour
         //could be done faster on the gpu
         rawContourSegments = results.Where(x => x.containsSegment != 0).ToList();
 
-        aabbIntersections = new(rawContourSegments.Cast<ISegment>());
+        intersections = new AABBContourIntersection(rawContourSegments.Cast<ISegment>());
+        //intersections = new BentleyOttmann.BentleyOttman(rawContourSegments.Cast<ISegment>());
         //aabbIntersections.intersectSegments();
 
 
@@ -242,7 +251,7 @@ public class Contour : MonoBehaviour
         //keep a dictionary to track which lines are growing form the left
         //if a segments statrpoint is contained, remove it and add its endpoint and add it to the associated list
         //if two lists end in the same point (i.e. a crossing), instaed start a new list
-        foreach ((int s, int e, int ind) in aabbIntersections.GraphEdges)
+        foreach ((int s, int e, int ind) in intersections.GraphEdges)
         {
             if (openLists.ContainsKey(s) && (!burned.Contains(s)))
             {
@@ -380,7 +389,7 @@ public class Contour : MonoBehaviour
             }
         }*/
 
-        if (aabbIntersections != null)
+        if (intersections != null)
         {
             Matrix4x4 flatMatrix = Camera.main.cameraToWorldMatrix * Matrix4x4.Translate(-Vector3.forward) * Matrix4x4.Scale(new Vector3(1, Camera.main.pixelHeight / (float)Camera.main.pixelWidth, 1));
 
@@ -400,7 +409,7 @@ public class Contour : MonoBehaviour
                     //draw final line lists infront of the camera
                     if (firstLoop) { firstLoop = false; lastIndex = ind; continue; }
                     Handles.matrix = flatMatrix;
-                    Handles.DrawLine(aabbIntersections.GraphNodes[lastIndex], aabbIntersections.GraphNodes[ind], 2);
+                    Handles.DrawLine(intersections.GraphNodes[lastIndex], intersections.GraphNodes[ind], 2);
                     lastIndex = ind;
 
 
@@ -418,14 +427,14 @@ public class Contour : MonoBehaviour
             
             
             /*Random.InitState(0);
-            foreach (var l in connected)
+            foreach (var l in outline)
             {
                 int start = l[0].Item1;
                 int end = l.Last().Item1;
                 Handles.color = Color.green;
-                Handles.DrawWireCube(bo.GraphNodes[start], Vector3.one * 0.01f + Random.insideUnitSphere * 0.0025f);
+                Handles.DrawWireCube(intersections.GraphNodes[start], Vector3.one * 0.01f + Random.insideUnitSphere * 0.0025f);
                 Handles.color = Color.red;
-                Handles.DrawWireCube(bo.GraphNodes[end], Vector3.one * 0.02f + Random.insideUnitSphere * 0.005f);
+                Handles.DrawWireCube(intersections.GraphNodes[end], Vector3.one * 0.02f + Random.insideUnitSphere * 0.005f);
 
 
             }*/
