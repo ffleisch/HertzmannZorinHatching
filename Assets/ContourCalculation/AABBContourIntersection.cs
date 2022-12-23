@@ -45,9 +45,9 @@ class AABBSegmentCompareHelper
 
 
 
-class AABBSegment : IBVHClientObject, IComparable<AABBSegment>{
-	public Vector2 start;
-	public Vector2 end;
+class AABBSegment : IBVHClientObject, IComparable<AABBSegment>,ISegment{
+	public Vector2 start { get; set; }
+	public Vector2 end { get; set; }
 	public float dx;
 	public float dy;
 	Bounds myBounds;
@@ -130,7 +130,7 @@ class AABBSegment : IBVHClientObject, IComparable<AABBSegment>{
 	}
 	public int CompareTo(AABBSegment other)
 	{
-		int res = GeometricPrimitives.twoPointsCompare(start, other.start);
+		int res = AABBSegmentCompareHelper.twoPointsCompare(start, other.start);
 		if (res == 0)
 		{
 			return AABBSegmentCompareHelper.angleCompare(this, other);
@@ -153,19 +153,23 @@ public class AABBContourIntersection :IIntersectionProvider
 
 		BoundingVolumeHierarchy<AABBSegment> tree = new();
 
-		Dictionary<Vector2, int> verticesSeen = new();
+		Dictionary<Hash128, int> verticesSeen = new();
 		Dictionary<int, AABBSegment> segments = new();
+
 		int GetVertexIndex(Vector2 vert)
 		{
-			if (verticesSeen.ContainsKey(vert))
+			Hash128 hash=new();
+			Vector3 vert3=vert;
+			HashUtilities.QuantisedVectorHash(ref vert3, ref hash);
+			if (verticesSeen.ContainsKey(hash))
 			{
-				return verticesSeen[vert];
+				return verticesSeen[hash];
 			}
 			else
 			{
 				int index = GraphNodes.Count;
 				GraphNodes.Add(vert);
-				verticesSeen.Add(vert, index);
+				verticesSeen.Add(hash, index);
 				return index;
 			}
 		}

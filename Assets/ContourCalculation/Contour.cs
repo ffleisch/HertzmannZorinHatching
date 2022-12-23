@@ -7,8 +7,8 @@ using UnityEngine;
 
 interface IIntersectionProvider
 {
-    public List<Vector2> GraphNodes { get;}
-	public List<(int, int, int)> GraphEdges { get;}//start index, end index, index of the originating segment
+    public List<Vector2> GraphNodes { get; }
+    public List<(int, int, int)> GraphEdges { get; }//start index, end index, index of the originating segment
 
 }
 
@@ -45,6 +45,11 @@ public class Contour : MonoBehaviour
     {
 
 
+    }
+
+
+    public void init()
+    {
         //load the compute shader
         cs = Resources.Load<ComputeShader>("ContourShader");
         kernelId = cs.FindKernel("GenerateContourSegments");
@@ -60,10 +65,6 @@ public class Contour : MonoBehaviour
         }
 
         updateMeshData();
-
-
-
-
 
     }
 
@@ -165,7 +166,7 @@ public class Contour : MonoBehaviour
     }
 
 
-    
+
     /// <summary>
     /// add a point resulting from the intersection algorithm to a list and create a corresponding raycast seed
     /// for this the original segment on which the point lies is used
@@ -203,7 +204,7 @@ public class Contour : MonoBehaviour
             normal = Vector3.Lerp(ogSegment.normalStart, ogSegment.normalEnd, ratio);
 
         }
-        RaycastSeed seed = new(pos, normal,this);
+        RaycastSeed seed = new(pos, normal, this);
         list.Add((point, seed));
     }
 
@@ -270,6 +271,7 @@ public class Contour : MonoBehaviour
                 }
             }
             else
+            //Debug.Log(Camera.main.ScreenToViewportPoint(new Vector2(Camera.main.pixelHeight,Camera.main.pixelWidth)));
             {
                 List<(int, RaycastSeed)> l = new();
                 outline.Add(l);
@@ -357,6 +359,7 @@ public class Contour : MonoBehaviour
     private List<ResultBufferStruct> rawContourSegments;
 
     private List<List<(int, RaycastSeed)>> outline = new();
+    //Debug.Log(Camera.main.ScreenToViewportPoint(new Vector2(Camera.main.pixelHeight,Camera.main.pixelWidth)));
 
     private void OnDrawGizmos()
     {
@@ -391,7 +394,9 @@ public class Contour : MonoBehaviour
 
         if (intersections != null)
         {
-            Matrix4x4 flatMatrix = Camera.main.cameraToWorldMatrix * Matrix4x4.Translate(-Vector3.forward) * Matrix4x4.Scale(new Vector3(1, Camera.main.pixelHeight / (float)Camera.main.pixelWidth, 1));
+
+            float mult = Mathf.Tan(Mathf.PI * Camera.main.fieldOfView / 360f);
+            Matrix4x4 flatMatrix = Camera.main.cameraToWorldMatrix * Matrix4x4.Translate(-Vector3.forward) * Matrix4x4.Scale(new Vector3(Camera.main.aspect * mult, mult, 1)); //* Matrix4x4.Scale(new Vector3(1, Camera.main.pixelHeight / (float)Camera.main.pixelWidth, 1));
 
             int i = 0;
             foreach (var l in outline)
@@ -409,7 +414,7 @@ public class Contour : MonoBehaviour
                     //draw final line lists infront of the camera
                     if (firstLoop) { firstLoop = false; lastIndex = ind; continue; }
                     Handles.matrix = flatMatrix;
-                    Handles.DrawLine(intersections.GraphNodes[lastIndex], intersections.GraphNodes[ind], 2);
+                    Handles.DrawLine(intersections.GraphNodes[lastIndex], intersections.GraphNodes[ind], 2 / mult);
                     lastIndex = ind;
 
 
@@ -418,16 +423,26 @@ public class Contour : MonoBehaviour
                 i += 1;
             }
 
-            /*int num = 0;
+            /*
+            int num = 0;
             Handles.color = Color.black;
-            foreach (var p in bo.GraphNodes) {
-                Handles.DrawWireCube(p,Vector3.one *0.01f*((num%10)/10f));
+            foreach (var p in intersections.GraphNodes) {
+                Handles.DrawWireCube(p, Vector3.one * 0.01f * ((1 + num % 9) / 10f));
                 num++;
             }*/
-            
-            
-            /*Random.InitState(0);
-            foreach (var l in outline)
+
+
+            Random.InitState(0);
+
+
+            /*num = 0;
+            foreach ((int s, int e,_) in intersections.GraphEdges) {
+                Handles.color = Color.HSVToRGB(((1 + num) % 50) / 50f, 1, 1);
+                Handles.DrawLine(intersections.GraphNodes[s],intersections.GraphNodes[e]);
+                num++;
+            }*/
+
+            /*foreach (var l in outline)
             {
                 int start = l[0].Item1;
                 int end = l.Last().Item1;

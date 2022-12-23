@@ -25,3 +25,16 @@ https://stackoverflow.com/a/1968345/125351
 
 https://github.com/EmmetOT/BoundingVolumeHierarchy
 https://box2d.org/files/ErinCatto_DynamicBVH_GDC2019.pdf
+
+
+//curvature
+https://gist.github.com/bhouston/0be120012c6c9286de60aa5e596fcf14
+
+@inproceedings{rusinkiewicz2004estimating,
+  title={Estimating curvatures and their derivatives on triangle meshes},
+  author={Rusinkiewicz, Szymon},
+  booktitle={Proceedings. 2nd International Symposium on 3D Data Processing, Visualization and Transmission, 2004. 3DPVT 2004.},
+  pages={486--493},
+  year={2004},
+  organization={IEEE}
+}
