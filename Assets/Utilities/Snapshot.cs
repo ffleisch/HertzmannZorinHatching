@@ -4,69 +4,65 @@ using UnityEngine;
 
 public class Snapshot : MonoBehaviour
 {
-    // Start is called before the first frame update
-    void Start()
-    {
-        referenceCam = Camera.main;
-        sh = Shader.Find("Unlit/testShader");
-        initTest();
-        myCam = Instantiate<Camera>(referenceCam);
-        myCam.transform.parent = transform;
-        referenceCam.tag = "Untagged";
-        var audioListener =referenceCam.GetComponent<AudioListener>();
-        if (audioListener) {
-            GameObject.Destroy(audioListener);
-        }
-    }
+	// Start is called before the first frame update
+	void Start()
+	{
+		sh = Shader.Find("Unlit/CrossFieldShader");
+		//initTest();
+		if (myCam == null)
+		{
+			myCam = Instantiate<Camera>(Camera.main);
+			myCam.transform.parent = Camera.main.transform;
+			myCam.name = "SnapshotHelperCam";
+			myCam.tag = "Untagged";
+		}
 
-    public RenderTexture rt;
-    public Shader sh;
-    Camera referenceCam;
-    private Camera myCam;
+		var audioListener = referenceCam.GetComponent<AudioListener>();
+		if (audioListener)
+		{
+			GameObject.Destroy(audioListener);
+		}
+	}
 
-    void init() {
+	public RenderTexture rt;
+	public Shader sh;
+	public Camera referenceCam;
+	private static Camera myCam;
 
-    }
+	private Texture2D tex;
+
+	public void init(RenderTexture rt,Texture2D tex,Camera referenceCam)
+	{
+		this.rt = rt;
+		this.tex = tex;
+		this.referenceCam = referenceCam;
+	}
 
 
-    // Update is called once per frame
-    void Update()
-    {
-        test();
-    }
 
-    public Texture2D testOutput;
-    void initTest(){
-        
-        rt = new RenderTexture(referenceCam.pixelWidth, referenceCam.pixelHeight, 16, RenderTextureFormat.ARGBFloat);
-        testOutput = new Texture2D(referenceCam.pixelWidth, referenceCam.pixelHeight, TextureFormat.RGBAFloat, false);
-    
-    }
+	public Texture2D testOutput;
 
-    void test() {
-        takeSnapshot(ref testOutput);
-    }
+	public void takeSnapshot()
+	{
+		myCam.CopyFrom(referenceCam);
 
-    void takeSnapshot(ref Texture2D outp) {
-        myCam.CopyFrom(referenceCam);
+		referenceCam.enabled = false;
+		myCam.enabled = true;
 
-        referenceCam.enabled = false;
-        myCam.enabled = true;
+		myCam.clearFlags = CameraClearFlags.Color;
+		myCam.backgroundColor = new Color(0,0,0,0);
 
-        myCam.clearFlags = CameraClearFlags.Color;
-        myCam.backgroundColor =Color.black;
+		myCam.targetTexture = rt;
+		RenderTexture.active = rt;
+		myCam.RenderWithShader(sh, "");
 
-        myCam.targetTexture = rt;
-        RenderTexture.active = rt;
-        myCam.RenderWithShader(sh,"");
-        
-        
-        
-        Rect regionToReadFrom = new Rect(0, 0, outp.width, outp.height);
-        outp.ReadPixels(regionToReadFrom,0,0,false);
-        outp.Apply();
-        referenceCam.enabled = true;
-        myCam.enabled = false;
-    }
+
+
+		Rect regionToReadFrom = new Rect(0, 0, tex.width, tex.height);
+		tex.ReadPixels(regionToReadFrom, 0, 0, false);
+		tex.Apply();
+		referenceCam.enabled = true;
+		myCam.enabled = false;
+	}
 
 }

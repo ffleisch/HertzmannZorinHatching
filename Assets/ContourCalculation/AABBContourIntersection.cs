@@ -45,7 +45,7 @@ class AABBSegmentCompareHelper
 
 
 
-class AABBSegment : IBVHClientObject, IComparable<AABBSegment>,ISegment{
+public class AABBSegment : IBVHClientObject, IComparable<AABBSegment>,ISegment{
 	public Vector2 start { get; set; }
 	public Vector2 end { get; set; }
 	public float dx;
@@ -145,13 +145,13 @@ public class AABBContourIntersection :IIntersectionProvider
 {
 	public List<Vector2> GraphNodes { get; }
 	public List<(int, int, int)> GraphEdges { get; }//start index, end index, index of the originating segment
-
+	public BoundingVolumeHierarchy<AABBSegment> tree;
 	public AABBContourIntersection(IEnumerable<ISegment> input)
 	{
 		GraphNodes = new();
 		GraphEdges = new();
 
-		BoundingVolumeHierarchy<AABBSegment> tree = new();
+		tree= new();
 
 		Dictionary<Hash128, int> verticesSeen = new();
 		Dictionary<int, AABBSegment> segments = new();

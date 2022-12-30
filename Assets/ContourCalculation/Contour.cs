@@ -29,6 +29,9 @@ public class Contour : MonoBehaviour
     // Start is called before the first frame update
     MeshFilter mf;
     public ComputeShader cs;
+
+    public BoundingVolumeHierarchy.BoundingVolumeHierarchy<AABBSegment> contourCollisionTree;
+
     private int kernelId;
     private ComputeBuffer triBuffer;
     private ComputeBuffer vertBuffer;
@@ -236,7 +239,18 @@ public class Contour : MonoBehaviour
 
         intersections = new AABBContourIntersection(rawContourSegments.Cast<ISegment>());
         //intersections = new BentleyOttmann.BentleyOttman(rawContourSegments.Cast<ISegment>());
-        //aabbIntersections.intersectSegments();
+
+        if (intersections.GetType() == typeof(AABBContourIntersection))
+        {
+            contourCollisionTree = ((AABBContourIntersection)intersections).tree;
+        }
+        else {
+            contourCollisionTree = new();
+            //TODO untested
+            foreach ((int s,int e,int o) in intersections.GraphEdges) {
+                contourCollisionTree.Add(new AABBSegment(intersections.GraphNodes[s],intersections.GraphNodes[e]));
+            }
+        }
 
 
 
