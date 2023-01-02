@@ -7,111 +7,111 @@ using UnityEngine;
 
 interface IIntersectionProvider
 {
-    public List<Vector2> GraphNodes { get; }
-    public List<(int, int, int)> GraphEdges { get; }//start index, end index, index of the originating segment
+	public List<Vector2> GraphNodes { get; }
+	public List<(int, int, int)> GraphEdges { get; }//start index, end index, index of the originating segment
 
 }
 
 public class Contour : MonoBehaviour
 {
-    struct ResultBufferStruct : ISegment
-    {
-        public Vector3 objectStart;
-        public Vector3 objectEnd;
-        public Vector3 normalStart;
-        public Vector3 normalEnd;
-        public Vector2 start { set; get; }
-        public Vector2 end { set; get; }
+	struct ResultBufferStruct : ISegment
+	{
+		public Vector3 objectStart;
+		public Vector3 objectEnd;
+		public Vector3 normalStart;
+		public Vector3 normalEnd;
+		public Vector2 start { set; get; }
+		public Vector2 end { set; get; }
 
-        public int containsSegment;
-    }
+		public int containsSegment;
+	}
 
-    // Start is called before the first frame update
-    MeshFilter mf;
-    public ComputeShader cs;
+	// Start is called before the first frame update
+	MeshFilter mf;
+	public ComputeShader cs;
 
-    public BoundingVolumeHierarchy.BoundingVolumeHierarchy<AABBSegment> contourCollisionTree;
+	public BoundingVolumeHierarchy.BoundingVolumeHierarchy<AABBSegment> contourCollisionTree;
 
-    private int kernelId;
-    private ComputeBuffer triBuffer;
-    private ComputeBuffer vertBuffer;
-    private ComputeBuffer normalBuffer;
-
-
-    private ComputeBuffer resultBuffer;
-
-    private MeshCollider mc;
+	private int kernelId;
+	private ComputeBuffer triBuffer;
+	private ComputeBuffer vertBuffer;
+	private ComputeBuffer normalBuffer;
 
 
-    int containsSegment;
-    void Start()
-    {
+	private ComputeBuffer resultBuffer;
+
+	private MeshCollider mc;
 
 
-    }
+	int containsSegment;
+	void Start()
+	{
 
 
-    public void init()
-    {
-        //load the compute shader
-        cs = Resources.Load<ComputeShader>("ContourShader");
-        kernelId = cs.FindKernel("GenerateContourSegments");
-
-        //write the mesh data to the compute buffers
-        //could be potentially done fatser with Mesh.GetNativeVertexBufferPtr
+	}
 
 
-        mc = GetComponent<MeshCollider>();
-        if (mc == null)
-        {
-            mc = gameObject.AddComponent<MeshCollider>();
-        }
+	public void init()
+	{
+		//load the compute shader
+		cs = Resources.Load<ComputeShader>("ContourShader");
+		kernelId = cs.FindKernel("GenerateContourSegments");
 
-        updateMeshData();
-
-    }
-
-    void updateMeshData()
-    {
-        mf = GetComponent<MeshFilter>();
-        if (mf == null)
-        {
-            Debug.LogError("No MeshFilter found");
-        }
+		//write the mesh data to the compute buffers
+		//could be potentially done fatser with Mesh.GetNativeVertexBufferPtr
 
 
-        //create Buffers
-        triBuffer = new(mf.mesh.triangles.Length, sizeof(int));
-        vertBuffer = new(mf.mesh.vertices.Length, sizeof(float) * 3);
-        normalBuffer = new(mf.mesh.normals.Length, sizeof(float) * 3);
-        resultBuffer = new(mf.mesh.triangles.Length / 3, sizeof(int) + sizeof(float) * (3 + 3 + 3 + 3 + 2 + 2));
+		mc = GetComponent<MeshCollider>();
+		if (mc == null)
+		{
+			mc = gameObject.AddComponent<MeshCollider>();
+		}
+
+		updateMeshData();
+
+	}
+
+	void updateMeshData()
+	{
+		mf = GetComponent<MeshFilter>();
+		if (mf == null)
+		{
+			Debug.LogError("No MeshFilter found");
+		}
 
 
-        //set buffer data
-        triBuffer.SetData(mf.mesh.triangles);
-        vertBuffer.SetData(mf.mesh.vertices);
-        normalBuffer.SetData(mf.mesh.normals);
-
-        //assign buffers to the compute shader
-        cs.SetBuffer(kernelId, "triangles", triBuffer);
-        cs.SetBuffer(kernelId, "vertices", vertBuffer);
-        cs.SetBuffer(kernelId, "normals", normalBuffer);
-        cs.SetBuffer(kernelId, "results", resultBuffer);
+		//create Buffers
+		triBuffer = new(mf.mesh.triangles.Length, sizeof(int));
+		vertBuffer = new(mf.mesh.vertices.Length, sizeof(float) * 3);
+		normalBuffer = new(mf.mesh.normals.Length, sizeof(float) * 3);
+		resultBuffer = new(mf.mesh.triangles.Length / 3, sizeof(int) + sizeof(float) * (3 + 3 + 3 + 3 + 2 + 2));
 
 
-        cs.SetInt("numTriangles", triBuffer.count / 3);
-    }
+		//set buffer data
+		triBuffer.SetData(mf.mesh.triangles);
+		vertBuffer.SetData(mf.mesh.vertices);
+		normalBuffer.SetData(mf.mesh.normals);
+
+		//assign buffers to the compute shader
+		cs.SetBuffer(kernelId, "triangles", triBuffer);
+		cs.SetBuffer(kernelId, "vertices", vertBuffer);
+		cs.SetBuffer(kernelId, "normals", normalBuffer);
+		cs.SetBuffer(kernelId, "results", resultBuffer);
+
+
+		cs.SetInt("numTriangles", triBuffer.count / 3);
+	}
 
 
 
 
-    private IIntersectionProvider intersections;
+	private IIntersectionProvider intersections;
 
 
-    void Update()
-    {
+	void Update()
+	{
 
-        /*
+		/*
                 if (Input.GetKeyDown(KeyCode.Space))
                 {
                     CalcContourSegments();
@@ -134,113 +134,116 @@ public class Contour : MonoBehaviour
                     }
                }*/
 
-        //CalcContourSegments();
-    }
-    /// <summary>
-    /// a point and a direction from which to check visibility
-    /// stores visibiltiy check to avoifd recalculation
-    /// </summary>
-    internal class RaycastSeed
-    {
-        public Vector3 position;
-        public Vector3 normal;
-        private bool wasEvaluated = false;
-        private bool visible;
-        private Contour superInstance;
-        internal RaycastSeed(Vector3 position, Vector3 normal, Contour superInstance)
-        {
-            this.superInstance = superInstance;
-            this.position = position;
-            this.normal = normal;
-        }
+		//CalcContourSegments();
+	}
+	/// <summary>
+	/// a point and a direction from which to check visibility
+	/// stores visibiltiy check to avoifd recalculation
+	/// </summary>
+	internal class RaycastSeed
+	{
+		public Vector3 position;
+		public Vector3 normal;
+		private bool wasEvaluated = false;
+		private bool visible;
+		private Contour superInstance;
+		internal RaycastSeed(Vector3 position, Vector3 normal, Contour superInstance)
+		{
+			this.superInstance = superInstance;
+			this.position = position;
+			this.normal = normal;
+		}
 
 
-        public bool testVisibility()
-        {
-            if (wasEvaluated) return visible;
+		public bool testVisibility()
+		{
+			if (wasEvaluated) return visible;
 
-            Vector3 root = superInstance.transform.TransformPoint(position + 0.01f * normal);
-            RaycastHit hit;
-            Vector3 camPos = Camera.main.transform.position;
-            Ray r = new Ray(root, camPos - root);
-            visible = !superInstance.mc.Raycast(r, out hit, Vector3.Magnitude(camPos - root) + 0.01f);
-            return visible;
-        }
-    }
-
-
-
-    /// <summary>
-    /// add a point resulting from the intersection algorithm to a list and create a corresponding raycast seed
-    /// for this the original segment on which the point lies is used
-    /// the normals and 3d positions are interpolated accoringly
-    /// </summary>
-    /// <param name="list"></param>
-    /// <param name="point"></param>
-    /// <param name="ogSegmentIndex"></param>
-    void addToList(List<(int, RaycastSeed)> list, int point, int ogSegmentIndex)
-    {
-
-        ResultBufferStruct ogSegment = rawContourSegments[ogSegmentIndex];
-
-        Vector3 pos;
-        Vector3 normal;
-
-        Vector2 screenPoint = intersections.GraphNodes[point];
-        //merge lists starting in the same point (thats not an intersection)
+			Vector3 root = superInstance.transform.TransformPoint(position + 0.01f * normal);
+			RaycastHit hit;
+			Vector3 camPos = Camera.main.transform.position;
+			Ray r = new Ray(root, camPos - root);
+			visible = !superInstance.mc.Raycast(r, out hit, Vector3.Magnitude(camPos - root) + 0.01f);
+			return visible;
+		}
+	}
 
 
-        if (screenPoint == ogSegment.start)
-        {
-            pos = ogSegment.objectStart;
-            normal = ogSegment.normalStart;
-        }
-        else if (screenPoint == ogSegment.end)
-        {
-            pos = ogSegment.objectEnd;
-            normal = ogSegment.normalEnd;
-        }
-        else
-        {
-            float ratio = ((screenPoint - ogSegment.start) / (ogSegment.end - ogSegment.start)).magnitude;
-            pos = Vector3.Lerp(ogSegment.objectStart, ogSegment.objectEnd, ratio);
-            normal = Vector3.Lerp(ogSegment.normalStart, ogSegment.normalEnd, ratio);
 
-        }
-        RaycastSeed seed = new(pos, normal, this);
-        list.Add((point, seed));
-    }
+	/// <summary>
+	/// add a point resulting from the intersection algorithm to a list and create a corresponding raycast seed
+	/// for this the original segment on which the point lies is used
+	/// the normals and 3d positions are interpolated accoringly
+	/// </summary>
+	/// <param name="list"></param>
+	/// <param name="point"></param>
+	/// <param name="ogSegmentIndex"></param>
+	void addToList(List<(int, RaycastSeed)> list, int point, int ogSegmentIndex)
+	{
 
+		ResultBufferStruct ogSegment = rawContourSegments[ogSegmentIndex];
 
-    public void CalcContourSegments()
-    {
-        uint threadGroupSizes;
+		Vector3 pos;
+		Vector3 normal;
+
+		Vector2 screenPoint = intersections.GraphNodes[point];
+		//merge lists starting in the same point (thats not an intersection)
 
 
-        int numTriangles = triBuffer.count / 3;
+		if (screenPoint == ogSegment.start)
+		{
+			pos = ogSegment.objectStart;
+			normal = ogSegment.normalStart;
+		}
+		else if (screenPoint == ogSegment.end)
+		{
+			pos = ogSegment.objectEnd;
+			normal = ogSegment.normalEnd;
+		}
+		else
+		{
+			float ratio = ((screenPoint - ogSegment.start) / (ogSegment.end - ogSegment.start)).magnitude;
+			pos = Vector3.Lerp(ogSegment.objectStart, ogSegment.objectEnd, ratio);
+			normal = Vector3.Lerp(ogSegment.normalStart, ogSegment.normalEnd, ratio);
+
+		}
+		RaycastSeed seed = new(pos, normal, this);
+		list.Add((point, seed));
+	}
 
 
-        //pass the camera position in object coordinates to the shader for contour calculation
-        cs.SetVector("cameraPos", transform.InverseTransformPoint(Camera.main.transform.position));
-        cs.SetMatrix("objectToClipSpace", Camera.main.projectionMatrix * Camera.main.worldToCameraMatrix * transform.localToWorldMatrix);
-
-        cs.GetKernelThreadGroupSizes(kernelId, out threadGroupSizes, out _, out _);
-
-        int numGroups = 1 + (int)(numTriangles / threadGroupSizes);
-
-        cs.Dispatch(kernelId, numGroups, 1, 1);
-        ResultBufferStruct[] results = new ResultBufferStruct[numTriangles];
-        resultBuffer.GetData(results);
+	public void CalcContourSegments()
+	{
+		uint threadGroupSizes;
 
 
-        //filter the triangles whicvh did not contain a contour segment
-        //could be done faster on the gpu
-        rawContourSegments = results.Where(x => x.containsSegment != 0).ToList();
+		int numTriangles = triBuffer.count / 3;
 
-        intersections = new AABBContourIntersection(rawContourSegments.Cast<ISegment>());
-        //intersections = new BentleyOttmann.BentleyOttman(rawContourSegments.Cast<ISegment>());
 
-        if (intersections.GetType() == typeof(AABBContourIntersection))
+		//pass the camera position in object coordinates to the shader for contour calculation
+		cs.SetVector("cameraPos", transform.InverseTransformPoint(Camera.main.transform.position));
+		cs.SetMatrix("objectToClipSpace", Camera.main.projectionMatrix * Camera.main.worldToCameraMatrix * transform.localToWorldMatrix);
+
+		cs.GetKernelThreadGroupSizes(kernelId, out threadGroupSizes, out _, out _);
+
+		int numGroups = 1 + (int)(numTriangles / threadGroupSizes);
+
+		cs.Dispatch(kernelId, numGroups, 1, 1);
+		ResultBufferStruct[] results = new ResultBufferStruct[numTriangles];
+		resultBuffer.GetData(results);
+
+
+		//filter the triangles whicvh did not contain a contour segment
+		//could be done faster on the gpu
+		rawContourSegments = results.Where(x => x.containsSegment != 0).ToList();
+
+		intersections = new AABBContourIntersection(rawContourSegments.Cast<ISegment>());
+		//intersections = new BentleyOttmann.BentleyOttman(rawContourSegments.Cast<ISegment>());
+
+
+
+		//TODO reconsider reusing the collisiontree
+		/*if (intersections.GetType() == typeof(AABBContourIntersection))
         {
             contourCollisionTree = ((AABBContourIntersection)intersections).tree;
         }
@@ -250,134 +253,150 @@ public class Contour : MonoBehaviour
             foreach ((int s,int e,int o) in intersections.GraphEdges) {
                 contourCollisionTree.Add(new AABBSegment(intersections.GraphNodes[s],intersections.GraphNodes[e]));
             }
-        }
+        }*/
 
 
 
-        Dictionary<int, List<(int, RaycastSeed)>> openLists = new();
-        HashSet<int> burned = new();
-        HashSet<int> twiceBurned = new();
-        outline = new();
-        int num = 0;
+		Dictionary<int, List<(int, RaycastSeed)>> openLists = new();
+		HashSet<int> burned = new();
+		HashSet<int> twiceBurned = new();
+		outline = new();
+		int num = 0;
 
 
 
-        //the segments are sorted, due to the bentleyx ottmann
-        //keep a dictionary to track which lines are growing form the left
-        //if a segments statrpoint is contained, remove it and add its endpoint and add it to the associated list
-        //if two lists end in the same point (i.e. a crossing), instaed start a new list
-        foreach ((int s, int e, int ind) in intersections.GraphEdges)
-        {
-            if (openLists.ContainsKey(s) && (!burned.Contains(s)))
-            {
-                var l = openLists[s];
-                addToList(l, e, ind);
-                //l.Add(e);
-                openLists.Remove(s);
-                if (openLists.ContainsKey(e))
-                {
-                    openLists.Remove(e);
-                    burned.Add(e);
-                }
-                else
-                {
-                    openLists[e] = l;
-                }
-            }
-            else
-            //Debug.Log(Camera.main.ScreenToViewportPoint(new Vector2(Camera.main.pixelHeight,Camera.main.pixelWidth)));
-            {
-                List<(int, RaycastSeed)> l = new();
-                outline.Add(l);
-                addToList(l, s, ind);
-                addToList(l, e, ind);
-                openLists[e] = l;
-            }
-            if (burned.Contains(s))
-            {
-                twiceBurned.Add(s);
-            }
-            num++;
-        }
+		//the segments are sorted, due to the bentleyx ottmann
+		//keep a dictionary to track which lines are growing form the left
+		//if a segments statrpoint is contained, remove it and add its endpoint and add it to the associated list
+		//if two lists end in the same point (i.e. a crossing), instaed start a new list
+		foreach ((int s, int e, int ind) in intersections.GraphEdges)
+		{
+			if (openLists.ContainsKey(s) && (!burned.Contains(s)))
+			{
+				var l = openLists[s];
+				addToList(l, e, ind);
+				//l.Add(e);
+				openLists.Remove(s);
+				if (openLists.ContainsKey(e))
+				{
+					openLists.Remove(e);
+					burned.Add(e);
+				}
+				else
+				{
+					openLists[e] = l;
+				}
+			}
+			else
+			//Debug.Log(Camera.main.ScreenToViewportPoint(new Vector2(Camera.main.pixelHeight,Camera.main.pixelWidth)));
+			{
+				List<(int, RaycastSeed)> l = new();
+				outline.Add(l);
+				addToList(l, s, ind);
+				addToList(l, e, ind);
+				openLists[e] = l;
+			}
+			if (burned.Contains(s))
+			{
+				twiceBurned.Add(s);
+			}
+			num++;
+		}
 
-        //merge lists starting in the same point (thats not an intersection)
-        Dictionary<int, List<(int, RaycastSeed)>> lineStarts = new();
-        List<List<int>> duplicates = new();
-        for (int i = outline.Count - 1; i >= 0; i--)
-        {
-            var l = outline[i];
-            var firstPointIndex = l.First().Item1;
+		//merge lists starting in the same point (thats not an intersection)
+		Dictionary<int, List<(int, RaycastSeed)>> lineStarts = new();
+		List<List<int>> duplicates = new();
+		for (int i = outline.Count - 1; i >= 0; i--)
+		{
+			var l = outline[i];
+			var firstPointIndex = l.First().Item1;
 
-            if (!burned.Contains(firstPointIndex))
-            {
-                if (lineStarts.ContainsKey(firstPointIndex))
-                {
-                    var oldLine = lineStarts[firstPointIndex];
-                    lineStarts.Remove(firstPointIndex);
-                    oldLine.Reverse();
-                    oldLine.RemoveAt(oldLine.Count - 1);
-                    oldLine.AddRange(l);
-                    outline.RemoveAt(i);
-                }
-                else
-                {
-                    lineStarts[firstPointIndex] = l;
-                }
-            }
-        }
-        Dictionary<int, List<(int, RaycastSeed)>> lineEnds = new();
+			if (!burned.Contains(firstPointIndex))
+			{
+				if (lineStarts.ContainsKey(firstPointIndex))
+				{
+					var oldLine = lineStarts[firstPointIndex];
+					lineStarts.Remove(firstPointIndex);
+					oldLine.Reverse();
+					oldLine.RemoveAt(oldLine.Count - 1);
+					oldLine.AddRange(l);
+					outline.RemoveAt(i);
+				}
+				else
+				{
+					lineStarts[firstPointIndex] = l;
+				}
+			}
+		}
+		Dictionary<int, List<(int, RaycastSeed)>> lineEnds = new();
 
-        //merge lists ending in the same point (thats not an intersection)
-        for (int i = outline.Count - 1; i >= 0; i--)
-        {
-            var l = outline[i];
-            var lastPointindex = l.Last().Item1;
-            if (!twiceBurned.Contains(lastPointindex))
-            {
-                if (lineEnds.ContainsKey(lastPointindex))
-                {
-                    var oldLine = lineEnds[lastPointindex];
-                    lineEnds.Remove(lastPointindex);
-                    l.Reverse();
-                    oldLine.RemoveAt(oldLine.Count - 1);
-                    oldLine.AddRange(l);
-                    outline.RemoveAt(i);
-                }
-                else
-                {
-                    lineEnds[lastPointindex] = l;
-                }
-            }
-        }
+		//merge lists ending in the same point (thats not an intersection)
+		for (int i = outline.Count - 1; i >= 0; i--)
+		{
+			var l = outline[i];
+			var lastPointindex = l.Last().Item1;
+			if (!twiceBurned.Contains(lastPointindex))
+			{
+				if (lineEnds.ContainsKey(lastPointindex))
+				{
+					var oldLine = lineEnds[lastPointindex];
+					lineEnds.Remove(lastPointindex);
+					l.Reverse();
+					oldLine.RemoveAt(oldLine.Count - 1);
+					oldLine.AddRange(l);
+					outline.RemoveAt(i);
+				}
+				else
+				{
+					lineEnds[lastPointindex] = l;
+				}
+			}
+		}
 
-        //remove hidden lines
-        for (int i = outline.Count - 1; i >= 0; i--)
-        {
-            var l = outline[i];
-            int visibleSum = 0;
-            foreach ((_, RaycastSeed s) in l)
-            {
-                visibleSum += s.testVisibility() ? 1 : 0;
-            }
+		//remove hidden lines
+		for (int i = outline.Count - 1; i >= 0; i--)
+		{
+			var l = outline[i];
+			int visibleSum = 0;
+			foreach ((_, RaycastSeed s) in l)
+			{
+				visibleSum += s.testVisibility() ? 1 : 0;
+			}
 
-            float score = (float)visibleSum / l.Count;
+			float score = (float)visibleSum / l.Count;
 
-            if (score < 0.5f)
-            {
-                outline.RemoveAt(i);
-            }
-        }
+			if (score < 0.5f)
+			{
+				outline.RemoveAt(i);
+			}
+		}
 
+		contourCollisionTree = new();
+		//TODO untested
+		foreach (var line in outline)
+		{
+			int last_p = -1;
+			foreach ((int p,_) in line)
+			{
+				if (last_p == -1) {
+					last_p = p;
+					continue;
+				}
+				contourCollisionTree.Add(new AABBSegment(intersections.GraphNodes[last_p], intersections.GraphNodes[p]));
+				last_p = p;
+			}
 
-    }
-    private List<ResultBufferStruct> rawContourSegments;
+		}
 
-    private List<List<(int, RaycastSeed)>> outline = new();
-    //Debug.Log(Camera.main.ScreenToViewportPoint(new Vector2(Camera.main.pixelHeight,Camera.main.pixelWidth)));
+	}
+	private List<ResultBufferStruct> rawContourSegments;
 
-    private void OnDrawGizmos()
-    {
-        /*if (contours != null)
+	private List<List<(int, RaycastSeed)>> outline = new();
+	//Debug.Log(Camera.main.ScreenToViewportPoint(new Vector2(Camera.main.pixelHeight,Camera.main.pixelWidth)));
+
+	private void OnDrawGizmos()
+	{
+		/*if (contours != null)
         {
             Handles.color = Color.red;
             Handles.matrix = transform.localToWorldMatrix;
@@ -388,7 +407,7 @@ public class Contour : MonoBehaviour
 
         }*/
 
-        /*if (bo != null)
+		/*if (bo != null)
         {
             //TODO this better
             Handles.matrix = Camera.main.cameraToWorldMatrix * Matrix4x4.Translate(-Vector3.forward) * Matrix4x4.Scale(new Vector3(1, Camera.main.pixelHeight / (float)Camera.main.pixelWidth, 1));
@@ -406,38 +425,38 @@ public class Contour : MonoBehaviour
             }
         }*/
 
-        if (intersections != null)
-        {
+		if (intersections != null)
+		{
 
-            float mult = Mathf.Tan(Mathf.PI * Camera.main.fieldOfView / 360f);
-            Matrix4x4 flatMatrix = Camera.main.cameraToWorldMatrix * Matrix4x4.Translate(-Vector3.forward) * Matrix4x4.Scale(new Vector3(Camera.main.aspect * mult, mult, 1)); //* Matrix4x4.Scale(new Vector3(1, Camera.main.pixelHeight / (float)Camera.main.pixelWidth, 1));
+			float mult = Mathf.Tan(Mathf.PI * Camera.main.fieldOfView / 360f);
+			Matrix4x4 flatMatrix = Camera.main.cameraToWorldMatrix * Matrix4x4.Translate(-Vector3.forward) * Matrix4x4.Scale(new Vector3(Camera.main.aspect * mult, mult, 1)); //* Matrix4x4.Scale(new Vector3(1, Camera.main.pixelHeight / (float)Camera.main.pixelWidth, 1));
 
-            int i = 0;
-            foreach (var l in outline)
-            {
-                bool firstLoop = true;
-                int lastIndex = 0;
-                foreach ((int ind, RaycastSeed s) in l)
-                {
-                    Handles.color = Color.HSVToRGB(((1 + i) % 10) / 10f, 1, 1);
-                    /*Handles.matrix = transform.localToWorldMatrix;
+			int i = 0;
+			foreach (var l in outline)
+			{
+				bool firstLoop = true;
+				int lastIndex = 0;
+				foreach ((int ind, RaycastSeed s) in l)
+				{
+					Handles.color = Color.HSVToRGB(((1 + i) % 10) / 10f, 1, 1);
+					/*Handles.matrix = transform.localToWorldMatrix;
 
                     Handles.DrawLine(s.position, s.position + s.normal * 0.1f);*/
 
 
-                    //draw final line lists infront of the camera
-                    if (firstLoop) { firstLoop = false; lastIndex = ind; continue; }
-                    Handles.matrix = flatMatrix;
-                    Handles.DrawLine(intersections.GraphNodes[lastIndex], intersections.GraphNodes[ind], 2 / mult);
-                    lastIndex = ind;
+					//draw final line lists infront of the camera
+					if (firstLoop) { firstLoop = false; lastIndex = ind; continue; }
+					Handles.matrix = flatMatrix;
+					Handles.DrawLine(intersections.GraphNodes[lastIndex], intersections.GraphNodes[ind], 2 / mult);
+					lastIndex = ind;
 
 
 
-                }
-                i += 1;
-            }
+				}
+				i += 1;
+			}
 
-            /*
+			/*
             int num = 0;
             Handles.color = Color.black;
             foreach (var p in intersections.GraphNodes) {
@@ -446,17 +465,17 @@ public class Contour : MonoBehaviour
             }*/
 
 
-            Random.InitState(0);
+			Random.InitState(0);
 
 
-            /*num = 0;
+			/*num = 0;
             foreach ((int s, int e,_) in intersections.GraphEdges) {
                 Handles.color = Color.HSVToRGB(((1 + num) % 50) / 50f, 1, 1);
                 Handles.DrawLine(intersections.GraphNodes[s],intersections.GraphNodes[e]);
                 num++;
             }*/
 
-            /*foreach (var l in outline)
+			/*foreach (var l in outline)
             {
                 int start = l[0].Item1;
                 int end = l.Last().Item1;
@@ -468,17 +487,17 @@ public class Contour : MonoBehaviour
 
             }*/
 
-        }
-    }
+		}
+	}
 
 
 
 
-    private void OnDestroy()
-    {
-        vertBuffer.Release();
-        triBuffer.Release();
-        normalBuffer.Release();
-        resultBuffer.Release();
-    }
+	private void OnDestroy()
+	{
+		vertBuffer.Release();
+		triBuffer.Release();
+		normalBuffer.Release();
+		resultBuffer.Release();
+	}
 }

@@ -14,17 +14,20 @@ public class GenerateCrosshatch : MonoBehaviour
 
 	}
 
+	bool insertGrid = false;
 	// Update is called once per frame
 	void Update()
 	{
-
+		insertGrid = Input.GetKeyDown(KeyCode.Space);
 	}
 
+	PointGrid grid;
 
 	public void init(Hatching h,Texture2D directionImage)
 	{
 		this.directionImage = directionImage;
 		this.h = h;
+		grid = new(directionImage.width,directionImage.height,h.dSep);
 	}
 
 
@@ -73,6 +76,12 @@ public class GenerateCrosshatch : MonoBehaviour
 		Handles.color = Color.green;
 		Handles.DrawLine(Input.mousePosition, Input.mousePosition + (Vector3)d2 * 200);
 		generateStreamLine(Input.mousePosition);
+		Handles.color = Color.red;
+		foreach (Point p in grid.neighborhoodEnumerator(Input.mousePosition)) {
+			Handles.DrawLine(p.pos,p.pos+p.dir,1);
+			Handles.DrawWireCube(p.pos, Vector2.one * 0.1f);
+			Debug.Log("Point " +p.pos);
+		}
 
 	}
 
@@ -93,6 +102,10 @@ public class GenerateCrosshatch : MonoBehaviour
 			pos += step;
 			Handles.color = Color.black;
 			Handles.DrawLine(pos, pos+Vector2.up, 0.1f);
+
+			if (insertGrid) {
+				grid.insert(new Point(pos,dir));
+			}
 
 			dir_last = dir;
 
