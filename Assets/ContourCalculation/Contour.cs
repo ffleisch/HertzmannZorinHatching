@@ -431,31 +431,34 @@ public class Contour : MonoBehaviour
 			float mult = Mathf.Tan(Mathf.PI * Camera.main.fieldOfView / 360f);
 			Matrix4x4 flatMatrix = Camera.main.cameraToWorldMatrix * Matrix4x4.Translate(-Vector3.forward) * Matrix4x4.Scale(new Vector3(Camera.main.aspect * mult, mult, 1)); //* Matrix4x4.Scale(new Vector3(1, Camera.main.pixelHeight / (float)Camera.main.pixelWidth, 1));
 
-			int i = 0;
-			foreach (var l in outline)
+
+			if (false)
 			{
-				bool firstLoop = true;
-				int lastIndex = 0;
-				foreach ((int ind, RaycastSeed s) in l)
+				int i = 0;
+				foreach (var l in outline)
 				{
-					Handles.color = Color.HSVToRGB(((1 + i) % 10) / 10f, 1, 1);
-					/*Handles.matrix = transform.localToWorldMatrix;
+					bool firstLoop = true;
+					int lastIndex = 0;
+					foreach ((int ind, RaycastSeed s) in l)
+					{
+						Handles.color = Color.HSVToRGB(((1 + i) % 10) / 10f, 1, 1);
+						/*Handles.matrix = transform.localToWorldMatrix;
 
-                    Handles.DrawLine(s.position, s.position + s.normal * 0.1f);*/
-
-
-					//draw final line lists infront of the camera
-					if (firstLoop) { firstLoop = false; lastIndex = ind; continue; }
-					Handles.matrix = flatMatrix;
-					Handles.DrawLine(intersections.GraphNodes[lastIndex], intersections.GraphNodes[ind], 2 / mult);
-					lastIndex = ind;
+						Handles.DrawLine(s.position, s.position + s.normal * 0.1f);*/
 
 
+						//draw final line lists infront of the camera
+						if (firstLoop) { firstLoop = false; lastIndex = ind; continue; }
+						Handles.matrix = flatMatrix;
+						Handles.DrawLine(intersections.GraphNodes[lastIndex], intersections.GraphNodes[ind], 2 / mult);
+						lastIndex = ind;
 
+
+
+					}
+					i += 1;
 				}
-				i += 1;
 			}
-
 			/*
             int num = 0;
             Handles.color = Color.black;
@@ -465,7 +468,6 @@ public class Contour : MonoBehaviour
             }*/
 
 
-			Random.InitState(0);
 
 
 			/*num = 0;

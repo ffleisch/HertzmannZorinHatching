@@ -48,6 +48,13 @@ class AABBSegmentCompareHelper
 public class AABBSegment : IBVHClientObject, IComparable<AABBSegment>,ISegment{
 	public Vector2 start { get; set; }
 	public Vector2 end { get; set; }
+
+	public Vector2 screenStart;
+	public Vector2 screenEnd;
+	private float screenDx;
+	private float screenDy;
+
+
 	public float dx;
 	public float dy;
 	Bounds myBounds;
@@ -101,6 +108,11 @@ public class AABBSegment : IBVHClientObject, IComparable<AABBSegment>,ISegment{
 
 	}
 
+	public AABBSegment(Vector2 p1, Vector2 p2, Vector2 size) : this(p1, p2) {
+		calcScreenPostions(size);
+	
+	}
+
 	public bool intersectsSegment(AABBSegment other, out Vector2 isect, out float ratio)
 	{
 		//a.dx = p1_x - a.start.x; a.dy = p1_y - a.start.y;
@@ -136,6 +148,24 @@ public class AABBSegment : IBVHClientObject, IComparable<AABBSegment>,ISegment{
 			return AABBSegmentCompareHelper.angleCompare(this, other);
 		}
 		return res;
+	}
+
+	public void calcScreenPostions(Vector2 size) {
+		screenStart = size*(start+Vector2.one)/2;
+		screenEnd = size*(end+Vector2.one)/2;
+		screenDx = size.x * dx / 2;
+		screenDy = size.y * dy / 2;
+	}
+
+
+	public bool intersectsUsingScreenCoord(AABBSegment other) { 
+	
+		float s, t;
+		s = (-screenDy * (screenStart.x - other.screenStart.x) + screenDx * (screenStart.y - other.screenStart.y)) / (-other.screenDx * screenDy + screenDx * other.screenDy);
+		t = (other.screenDx * (screenStart.y - other.screenStart.y) - other.screenDy * (screenStart.x - other.screenStart.x)) / (-other.screenDx * screenDy + screenDx * other.screenDy);
+
+		return (s >= 0 && s <= 1 && t >= 0 && t <= 1);
+		
 	}
 
 }
