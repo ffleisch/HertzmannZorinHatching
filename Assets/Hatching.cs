@@ -95,7 +95,7 @@ public class Hatching : MonoBehaviour
 
 		generateCrosshatch = gameObject.AddComponent<GenerateCrosshatch>();
 
-		generateCrosshatch.init(this, directionTex, contour.contourCollisionTree);
+		generateCrosshatch.init(this, directionTex);
 	}
 
 	// Update is called once per frame

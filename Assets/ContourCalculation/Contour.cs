@@ -224,6 +224,8 @@ public class Contour : MonoBehaviour
 		cs.SetVector("cameraPos", transform.InverseTransformPoint(Camera.main.transform.position));
 		cs.SetMatrix("objectToClipSpace", Camera.main.projectionMatrix * Camera.main.worldToCameraMatrix * transform.localToWorldMatrix);
 
+		cs.SetVector("wh_half",new Vector2(Camera.main.pixelWidth,Camera.main.pixelHeight)/2.0f);
+
 		cs.GetKernelThreadGroupSizes(kernelId, out threadGroupSizes, out _, out _);
 
 		int numGroups = 1 + (int)(numTriangles / threadGroupSizes);

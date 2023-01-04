@@ -49,10 +49,10 @@ public class AABBSegment : IBVHClientObject, IComparable<AABBSegment>,ISegment{
 	public Vector2 start { get; set; }
 	public Vector2 end { get; set; }
 
-	public Vector2 screenStart;
+	/*public Vector2 screenStart;
 	public Vector2 screenEnd;
 	private float screenDx;
-	private float screenDy;
+	private float screenDy;*/
 
 
 	public float dx;
@@ -108,10 +108,10 @@ public class AABBSegment : IBVHClientObject, IComparable<AABBSegment>,ISegment{
 
 	}
 
-	public AABBSegment(Vector2 p1, Vector2 p2, Vector2 size) : this(p1, p2) {
-		calcScreenPostions(size);
+	//public AABBSegment(Vector2 p1, Vector2 p2, Vector2 size) : this(p1, p2) {
+	//	calcScreenPostions(size);
 	
-	}
+	//}
 
 	public bool intersectsSegment(AABBSegment other, out Vector2 isect, out float ratio)
 	{
@@ -149,7 +149,7 @@ public class AABBSegment : IBVHClientObject, IComparable<AABBSegment>,ISegment{
 		}
 		return res;
 	}
-
+	/*
 	public void calcScreenPostions(Vector2 size) {
 		screenStart = size*(start+Vector2.one)/2;
 		screenEnd = size*(end+Vector2.one)/2;
@@ -166,7 +166,7 @@ public class AABBSegment : IBVHClientObject, IComparable<AABBSegment>,ISegment{
 
 		return (s >= 0 && s <= 1 && t >= 0 && t <= 1);
 		
-	}
+	}*/
 
 }
 

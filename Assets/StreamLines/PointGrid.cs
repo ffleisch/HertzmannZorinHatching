@@ -46,11 +46,13 @@ public class StreamlinePoint
 
 		this.dir = d1;
 
-		float determinant = d1.x * d2.y - d1.x * d2.x;
+		float determinant = d1.x * d2.y - d1.y * d2.x;
 		distort[0, 0] = d2.y / determinant;
 		distort[0, 1] = -d2.x / determinant;
 		distort[1, 0] = -d1.y / determinant;
 		distort[1, 1] = d1.x / determinant;
+		this.d1 = d1;
+		this.d2 = d2;
 
 	}
 
@@ -64,15 +66,17 @@ public class StreamlinePoint
 
 	public bool Parallel(Vector2 p1, Vector2 p2)
 	{
-		float p_dash_1_x = distort[0, 0] * p1.x + distort[0, 1] * p1.y;
-		float p_dash_1_y = distort[1, 0] * p1.x + distort[1, 1] * p1.y;
-		float p_dash_2_x = distort[0, 0] * p2.x + distort[0, 1] * p2.y;
-		float p_dash_2_y = distort[1, 0] * p2.x + distort[1, 1] * p2.y;
+		Vector2 v1= new Vector2(distort[0, 0] * p1.x + distort[0, 1] * p1.y,distort[1, 0] * p1.x + distort[1, 1] * p1.y);
+		Vector2 v2= new Vector2(distort[0, 0] * p2.x + distort[0, 1] * p2.y,distort[1, 0] * p2.x + distort[1, 1] * p2.y);
 
-		Vector2 left = new Vector2(p_dash_1_x * rotate_45_left[0, 0] + p_dash_1_y * rotate_45_left[0, 1], p_dash_1_x * rotate_45_left[1, 0] + p_dash_1_y * rotate_45_left[1, 1]);
-		Vector2 right = new Vector2(p_dash_1_x * rotate_45_right[0, 0] + p_dash_1_y * rotate_45_right[0, 1], p_dash_1_x * rotate_45_right[1, 0] + p_dash_1_y * rotate_45_right[1, 1]);
-		Vector2 p_dash_2 = new Vector2(p_dash_2_x, p_dash_2_y);
-		return Vector2.Dot(left, p_dash_2) * Vector2.Dot(right, p_dash_2) > 0;
+		return Mathf.Abs(Vector2.Dot(v1,v2)/(v1.magnitude*v2.magnitude))>0.70710678118f;// 1/sqrt(2)=0.707=cos(45°)
+	}
+
+
+	public Vector2 getHatchPerpendicularVector(Vector2 dir) {
+
+		Vector2 v1= new Vector2(distort[0, 0] * dir.x + distort[0, 1] * dir.y,distort[1, 0] * dir.x + distort[1, 1] * dir.y);
+		return new Vector2(d1.x*v1.y-d2.x*v1.x,d1.y*v1.y-d2.y*v1.x);
 	}
 
 	public bool Parallel(StreamlinePoint other)
@@ -89,12 +93,16 @@ public class PointGrid{
 	float stride;
 	int w, h;
 	int nx, ny;
+
 	public PointGrid(int w, int h, float stride) {
 		this.stride = stride;
 		this.w = w;
 		this.h = h;
-		nx =1+(int)(w/stride);
-		ny =1+(int)(h/stride);
+		nx =Mathf.CeilToInt(w/stride);
+		ny =Mathf.CeilToInt(h/stride);
+
+		//Debug.Log("nx "+ nx+ " w "+ w + " nx*stride " + (nx*stride));
+		//Debug.Log("ny "+ ny+ " h "+ h + " ny*stride " + (ny*stride));
 		array = new List<StreamlinePoint>[nx,ny];
 	}
 
@@ -102,7 +110,7 @@ public class PointGrid{
 	private (int, int) coords(Vector2 pos) {
 		return ((int)(pos.x/stride),(int)(pos.y/stride));
 	}
-	private bool inBounds(Vector2 p) {
+	public bool inBounds(Vector2 p) {
 		return (p.x>0)&&(p.x<w)&&(p.y>0)&&(p.y<h);
 	}
 	public void insert(StreamlinePoint p) {
@@ -117,7 +125,7 @@ public class PointGrid{
 	}
 
 	private bool inBoundsInt(int x ,int y) {
-		return (x>0)&&(x<nx)&&(y>0)&&(y<nx);
+		return (x>0)&&(x<nx)&&(y>0)&&(y<ny);
 	}
 	public IEnumerable<StreamlinePoint> neighborhoodEnumerator(Vector2 pos) {
 		if (!inBounds(pos)) {
@@ -125,10 +133,10 @@ public class PointGrid{
 		}
 
 		(int x, int y) = coords(pos);
-		for (int i = -1; i < 1; i++) {
-			for (int j = -1; i < 1; i++)
+		for (int i = -1; i <= 1; i++) {
+			for (int j = -1; j <= 1; j++)
 			{
-				if ((x>0)&&(x<nx)&&(y>0)&&(y<nx)) {
+				if ((x+i>=0)&&(x+i<nx)&&(y+j>=0)&&(y+j<ny)) {
 					if (array[x+i, y+j] != null) {
 						foreach (var p in array[x+i, y+j]) {
 							yield return p;
