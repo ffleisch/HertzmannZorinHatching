@@ -6,36 +6,64 @@ public class Hatching : MonoBehaviour
 {
 	// Start is called before the first frame update
 
+	[HideInInspector]
 	public Contour contour;
 
+	[HideInInspector]
 	CrossFields crossFields;
 
+	[HideInInspector]
 	GenerateCrosshatch generateCrosshatch;
+
+
+
+	LineRendererGenerator lineRendererGenerator;
 
 	public float parabolicLimit = 0.1f;
 
 
+	[HideInInspector]
 	public Vector3[] e1;
+	[HideInInspector]
 	public Vector3[] e2;
+	[HideInInspector]
 	public float[] k1;
+	[HideInInspector]
 	public float[] k2;
 
+	[HideInInspector]
 	public Vector3[] vertices;
+	[HideInInspector]
 	public Vector3[] normals;
+	[HideInInspector]
 	public int[] triangles;
 
 
 
 	RenderTexture directionRT;
+	[HideInInspector]
 	public Texture2D directionTex;
 
+	RenderTexture brightnessRT;
+	[HideInInspector]
+	public Texture2D brightnessTex;
+	
+	[HideInInspector]
 	Snapshot directionSnapShot;
+	[HideInInspector]
+	Snapshot brightnessSnapshot;
+
 
 	public Camera myCamera;
 
 	public float dSep = 10;
 	public float dTest = 0.5f;
 
+	public float lowerLimit = 0.65f;
+	public float upperLimit = 0.95f;
+
+	//public LineRenderer lineRenderer;
+	public GameObject lineRendererPrefab;
 
 	void Start()
 	{
@@ -49,10 +77,19 @@ public class Hatching : MonoBehaviour
 
 		contour = gameObject.AddComponent<Contour>();
 		crossFields = gameObject.AddComponent<CrossFields>();
+		lineRendererGenerator = gameObject.AddComponent<LineRendererGenerator>();
+
 
 		MeshFilter mf = GetComponent<MeshFilter>();
 
+		if (lineRendererPrefab == null) {
+			Debug.LogError("Line Renderer not set");
 
+			GameObject go = new();
+			go.AddComponent<LineRenderer>();
+			lineRendererPrefab = go;
+			
+		}
 
 
 
@@ -86,17 +123,30 @@ public class Hatching : MonoBehaviour
 
 
 		directionSnapShot = gameObject.AddComponent<Snapshot>();
+		directionSnapShot.shader = Shader.Find("Unlit/CrossFieldShader");
+
+
+		brightnessSnapshot = gameObject.AddComponent<Snapshot>();
 
 		directionRT = new RenderTexture(myCamera.pixelWidth, myCamera.pixelHeight, 16, RenderTextureFormat.ARGBFloat);
 		directionTex = new Texture2D(myCamera.pixelWidth, myCamera.pixelHeight, TextureFormat.RGBAFloat, false);
 
+		brightnessRT = new RenderTexture(myCamera.pixelWidth, myCamera.pixelHeight, 16, RenderTextureFormat.ARGBFloat);
+		brightnessTex = new Texture2D(myCamera.pixelWidth, myCamera.pixelHeight, TextureFormat.RGBAFloat, false);
+		
 		directionSnapShot.init(directionRT, directionTex, myCamera);
-
+		brightnessSnapshot.init(brightnessRT, brightnessTex, myCamera);
 
 		generateCrosshatch = gameObject.AddComponent<GenerateCrosshatch>();
 
-		generateCrosshatch.init(this, directionTex);
+		generateCrosshatch.init(this, directionTex,brightnessTex);
+
+
+		lineRendererGenerator.init(this);
 	}
+
+
+
 
 	// Update is called once per frame
 	void Update()
@@ -104,9 +154,16 @@ public class Hatching : MonoBehaviour
 		if (myCamera.transform.hasChanged || transform.hasChanged)
 		{
 			contour.CalcContourSegments();
+
+
+
 			directionSnapShot.takeSnapshot();
+			brightnessSnapshot.takeSnapshot();
+
+			generateCrosshatch.generateHatches();
 			myCamera.transform.hasChanged = false;
 			transform.hasChanged = false;
+			lineRendererGenerator.updateLineRenderers(generateCrosshatch.generateLinerendererPoints());	
 		}
 
 

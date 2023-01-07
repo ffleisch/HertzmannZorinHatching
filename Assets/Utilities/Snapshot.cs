@@ -7,7 +7,6 @@ public class Snapshot : MonoBehaviour
 	// Start is called before the first frame update
 	void Start()
 	{
-		sh = Shader.Find("Unlit/CrossFieldShader");
 		//initTest();
 		if (myCam == null)
 		{
@@ -25,7 +24,7 @@ public class Snapshot : MonoBehaviour
 	}
 
 	public RenderTexture rt;
-	public Shader sh;
+	public Shader shader;
 	public Camera referenceCam;
 	private static Camera myCam;
 
@@ -54,7 +53,7 @@ public class Snapshot : MonoBehaviour
 
 		myCam.targetTexture = rt;
 		RenderTexture.active = rt;
-		myCam.RenderWithShader(sh, "");
+		myCam.RenderWithShader(shader, "");
 
 
 

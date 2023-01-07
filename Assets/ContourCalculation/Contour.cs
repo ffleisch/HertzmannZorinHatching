@@ -395,7 +395,7 @@ public class Contour : MonoBehaviour
 
 	private List<List<(int, RaycastSeed)>> outline = new();
 	//Debug.Log(Camera.main.ScreenToViewportPoint(new Vector2(Camera.main.pixelHeight,Camera.main.pixelWidth)));
-
+	static bool drawContour=false;
 	private void OnDrawGizmos()
 	{
 		/*if (contours != null)
@@ -434,7 +434,7 @@ public class Contour : MonoBehaviour
 			Matrix4x4 flatMatrix = Camera.main.cameraToWorldMatrix * Matrix4x4.Translate(-Vector3.forward) * Matrix4x4.Scale(new Vector3(Camera.main.aspect * mult, mult, 1)); //* Matrix4x4.Scale(new Vector3(1, Camera.main.pixelHeight / (float)Camera.main.pixelWidth, 1));
 
 
-			if (false)
+			if (drawContour)
 			{
 				int i = 0;
 				foreach (var l in outline)
