@@ -1,8 +1,9 @@
 
-Shader "Unlit/CrossFieldShader"
+Shader "Unlit/RenderFlat"
 {
 	Properties
 	{
+		_MainTex("Texture", 2D) = "white" {}
 	}
 		SubShader
 	{
@@ -15,7 +16,6 @@ Shader "Unlit/CrossFieldShader"
 			#pragma vertex vert
 			#pragma fragment frag
 			#pragma geometry geom
-
 			#define UNITY_SHADER_NO_UPGRADE 1
 			// make fog work
 			#pragma multi_compile_fog
@@ -25,27 +25,34 @@ Shader "Unlit/CrossFieldShader"
 			struct appdata
 			{
 				float4 vertex : POSITION;
+				float2 uv : TEXCOORD0;
 				float4 mixedTangent: TANGENT; //direction of largest curvatue  in xyz and corssfield rotation in w
-				float3 normal: NORMAL;
+				float3 normal:NORMAL;
 			};
 
-			struct v2g
-			{
-				float4 vertex : SV_POSITION;
-				float3 normal: NORMAL;
+
+			struct v2g {
+								float4 vertex : POSITION;
+						float2 uv : TEXCOORD0;
+						float3 normal:NORMAL;
 				float3 dir: TANGENT;  //vector in a direction of the corssfiel in this vertex
 			};
 
 			struct g2f
 			{
+				float2 uv : TEXCOORD0;
+				UNITY_FOG_COORDS(1)
 				float4 vertex : SV_POSITION;
-				float4 objPos : TEXTCOORD2; //interpolated original position
-				float3 normal: NORMAL;
-				float3 d1: TEXCOORD0; //direction of one interpolated crossfield vector
-				float3 d2: TEXCOORD1; //direction of the other orthogonal crossfield vector
+				float3 normal:NORMAL;
+				float4 objPos : TEXTCOORD1; //interpolated original position
+
+				float3 d1: TEXCOORD2; //direction of one interpolated crossfield vector
+				float3 d2: TEXCOORD3; //direction of the other orthogonal crossfield vector
+
 			};
 
-
+			sampler2D _MainTex;
+			float4 _MainTex_ST;
 
 
 			//https://docs.unity3d.com/Packages/com.unity.shadergraph@6.9/manual/Rotate-About-Axis-Node.html
@@ -63,6 +70,7 @@ Shader "Unlit/CrossFieldShader"
 				};
 				return mul(rot_mat,  In);
 			}
+
 
 
 			[maxvertexcount(3)]
@@ -113,13 +121,13 @@ Shader "Unlit/CrossFieldShader"
 
 
 				//write out new vertices
-				for (i = 0; i < 3; i++)
+				for (i = 2; i >=0; i--)
 				{
 					float4 vert = input[i].vertex;
 					o.normal = input[i].normal;
-					o.vertex = UnityObjectToClipPos(vert);
+					o.vertex = float4(float2(-1, -1) + 2 * float2(input[i].uv.x, input[i].uv.y), 0, 1); //UnityObjectToClipPos(vert);
 					o.objPos = vert;
-
+					o.uv = input[i].uv;
 					o.d1 = directions[i];
 					o.d2 = cross(input[i].normal,o.d1);
 					triStream.Append(o);
@@ -137,50 +145,53 @@ Shader "Unlit/CrossFieldShader"
 					triStream.Append(o);
 				}*/
 
-				triStream.RestartStrip();
+				//triStream.RestartStrip();
+
+				/*
+				//float3 uvCross = cross(float3(input[2].uv - input[0].uv,0),float3( input[1].uv - input[0].uv,0));
+
+				//bool chirality = uvCross.z < 0;
+				g2f o;
+				for (int i = 0; i < 3; i++)
+				{
+					int ind = 2 - i;
+
+					o.normal = input[ind].normal;
+
+
+					o.vertex = input[ind].vertex;//UnityObjectToClipPos(clipPos); //UnityObjectToClipPos(vert);
+					o.uv = input[ind].uv;
+					triStream.Append(o);
+				}*/
+
+
+
 			}
 
+			v2g vert(appdata v)
+			{
+				v2g o;
+				o.vertex = v.vertex;//float4(float2(-1,-1) + 2 * float2(v.uv.x,v.uv.y), 0,1);
 
+				o.dir = Unity_RotateAboutAxis_Radians_float(v.mixedTangent.xyz,v.normal,v.mixedTangent.w);
 
-		v2g vert(appdata v)
-		{
-			v2g o;
-			o.vertex = v.vertex;//UnityObjectToClipPos(v.vertex);
-			o.normal = v.normal;
+				o.uv = v.uv;//TRANSFORM_TEX(v.uv, _MainTex);
+				UNITY_TRANSFER_FOG(o,o.vertex);
+				return o;
+			}
+
+			fixed4 frag(g2f i) : SV_Target
+			{
 			
-
-			//create a vector in direction of the crossfield interpreting the tangent input as the concatenation of a three component prinicipal curvature and an angle
-			o.dir = Unity_RotateAboutAxis_Radians_float(v.mixedTangent.xyz,v.normal,v.mixedTangent.w);
-			return o;
-		}
-
-		fixed4 frag(g2f i) : SV_Target
-		{
-			//does this work?
-				//i.vertex = UnityObjectToClipPos(i.vertex);
-				//float4 A_p_d1_dash = mul(MATRIX_MVP,float4(i.d1.xyz,0.0));
-				//float4 A_p_d2_dash = mul(MATRIX_MVP,float4(i.d2.xyz,0.0));
-				//float4 screen_gradient_d1 = (A_p_d1_dash * i.vertex.w - A_p_d1_dash.w * i.vertex) / (i.vertex.w * i.vertex.w);
-				//float4 screen_gradient_d2 = (A_p_d2_dash * i.vertex.w - A_p_d2_dash.w * i.vertex) / (i.vertex.w * i.vertex.w);
+					//TODO translate fomr d1 d2 normal base to uv base
 
 
-
-
-				//project the surface diirections into clip space
-				float4 A_p = UnityObjectToClipPos(i.objPos);
-				float4 A_p_d1_dash = mul(UNITY_MATRIX_MVP,float4(i.d1.xyz,0.0));
-				float4 A_p_d2_dash = mul(UNITY_MATRIX_MVP,float4(i.d2.xyz,0.0));
-				float4 screen_gradient_d1 = (A_p_d1_dash * A_p.w - A_p_d1_dash.w * A_p) / (A_p.w * A_p.w);
-				float4 screen_gradient_d2 = (A_p_d2_dash * A_p.w - A_p_d2_dash.w * A_p) / (A_p.w * A_p.w);
-
-
-				//encode them in a float4
-				float2 dir1 = screen_gradient_d1.xy;
-				float2 dir2 = screen_gradient_d2.xy;
-				float ratio = _ScreenParams.y / (float)_ScreenParams.x;
-				return float4(dir1.x,-dir1.y * ratio,dir2.x,-dir2.y * ratio);//float4(dir1.xy,dir2.xy);//,d2_pos.xy);//float4(o.d1[0],o.d1[1],0,0);//,o.d2[0],o.d2[1]);//float4(0,1,depth,1);			}
-		}
-				ENDCG
-		}
+					float2 dir1 = i.d1.xy;
+					float2 dir2 = i.d2.xy;
+					float ratio = _ScreenParams.y / (float)_ScreenParams.x;
+					return float4(dir1.x,-dir1.y * ratio,dir2.x,-dir2.y * ratio);//float4(dir1.xy,dir2.xy);//,d2_pos.xy);//float4(o.d1[0],o.d1[1],0,0);//,o.d2[0],o.d2[1]);//float4(0,1,depth,1);			}
+			}
+		ENDCG
+	}
 	}
 }
