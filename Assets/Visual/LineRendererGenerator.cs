@@ -44,7 +44,7 @@ public class LineRendererGenerator : MonoBehaviour
 				newLr.transform.parent = lineRendererParent.transform;
 				lr = newLr.GetComponent<LineRenderer>();
 				
-				lr.useWorldSpace = false;
+				lr.useWorldSpace = true;
 			}
 			
 			

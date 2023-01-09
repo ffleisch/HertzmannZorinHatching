@@ -394,6 +394,15 @@ public class Contour : MonoBehaviour
 	private List<ResultBufferStruct> rawContourSegments;
 
 	private List<List<(int, RaycastSeed)>> outline = new();
+
+	public IEnumerable<IEnumerable<Vector3>> getOutlineLines() {
+		foreach (var l in outline) {
+			
+			yield return l.Select<(int,RaycastSeed),UnityEngine.Vector3>(item=>(intersections.GraphNodes[item.Item1]));
+		}
+	
+	
+	}
 	//Debug.Log(Camera.main.ScreenToViewportPoint(new Vector2(Camera.main.pixelHeight,Camera.main.pixelWidth)));
 	static bool drawContour=false;
 	private void OnDrawGizmos()

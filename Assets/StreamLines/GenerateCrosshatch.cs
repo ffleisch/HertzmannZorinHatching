@@ -425,18 +425,17 @@ public class GenerateCrosshatch : MonoBehaviour
 		}
 	}
 
-	int brightnessTransferFunction(Color c)
-	{
-		int zw = 0;
-		float brightness = (c[0] + c[1] + c[2]) / 3.0f;
-		zw += brightness > h.lowerLimit ? 1 : 0;
-		zw += brightness > h.upperLimit ? 1 : 0;
-		return zw;
-	}
 
 	public List<Vector3[]> generateLinerendererPoints() {
 		List<Vector3[]> outp=new();
+		float mult = Mathf.Tan(Mathf.PI * Camera.main.fieldOfView / 360f);
+		float w = Camera.main.scaledPixelWidth;
+		float h = Camera.main.scaledPixelHeight;
 
+		Matrix4x4 viewMatrix = Camera.main.cameraToWorldMatrix * Matrix4x4.Translate(-Vector3.forward) * Matrix4x4.Scale(new Vector3(Camera.main.aspect * mult, mult, 1)); //* Matrix4x4.Scale(new Vector3(1, Camera.main.pixelHeight / (float)Camera.main.pixelWidth, 1));
+		viewMatrix = viewMatrix * Matrix4x4.Translate(new Vector3(-1, -1, 0)) * Matrix4x4.Scale(new Vector3(2 / w, 2 / h, 1));
+		
+		
 		foreach (var l in streamlines) {
 			List<Vector3> openList=new();
 			foreach (var sp in l) {
@@ -459,8 +458,36 @@ public class GenerateCrosshatch : MonoBehaviour
 
 		}
 
+		foreach (var l in this.h.contour.getOutlineLines()) {
+			outp.Add(l.ToArray());		
+		}
+
+
+		foreach (var arr in outp) {
+			for (int i = 0; i < arr.Length; i++) {
+				Vector4 zw =new Vector4(arr[i].x,arr[i].y,arr[i].z,1);
+				//arr[i]=viewMatrix.MultiplyPoint(arr[i]);			
+				zw = viewMatrix * zw;
+				arr[i] = new Vector3(zw.x, zw.y, zw.z) / zw.w;
+			}
+		
+		
+		}
+
+
 		return outp;
 	}
+
+
+	int brightnessTransferFunction(Color c)
+	{
+		int zw = 0;
+		float brightness = (c[0] + c[1] + c[2]) / 3.0f;
+		zw += brightness > h.lowerLimit ? 1 : 0;
+		zw += brightness > h.upperLimit ? 1 : 0;
+		return zw;
+	}
+
 	void reduceHatches()
 	{
 		foreach (var l in streamlines)

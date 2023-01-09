@@ -38,3 +38,9 @@ https://gist.github.com/bhouston/0be120012c6c9286de60aa5e596fcf14
   year={2004},
   organization={IEEE}
 }
+
+
+
+
+//shading
+https://en.wikipedia.org/wiki/Blinn%E2%80%93Phong_reflection_model
