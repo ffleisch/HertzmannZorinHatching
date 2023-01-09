@@ -53,15 +53,15 @@ Shader "Unlit/phongShading"
 			{
 				// sample the texture
 
-				float3 lightDir = _WorldSpaceLightPos0.w==0 ? normalize(_WorldSpaceLightPos0.xyz- i.vertex) : _WorldSpaceLightPos0.xyz;
-
+				float3 lightDir = normalize(_WorldSpaceLightPos0.xyz);
+				float3 viewDir = normalize(WorldSpaceViewDir(i.vertex));
 				
 
 				float NdotL = dot(i.normal, lightDir);
 
 
 
-				float3 halfWay = normalize(lightDir + i.normal);
+				float3 halfWay = normalize(lightDir + viewDir);
 
 				float3 NdotH = dot(i.normal, halfWay);
 

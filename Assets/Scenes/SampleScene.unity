@@ -155,9 +155,12 @@ MonoBehaviour:
   brightnessShader: {fileID: 0}
   dSep: 10
   dTest: 0.8
-  lowerLimit: 0.65
+  lowerLimit: 0.7
   upperLimit: 0.95
   lineRendererPrefab: {fileID: 4225181713977468843, guid: 6fbb66a0465cfbe498137d1e63747e55, type: 3}
+  renderLayer:
+    serializedVersion: 2
+    m_Bits: 5
 --- !u!1001 &348551640
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -254,6 +257,9 @@ MonoBehaviour:
   lowerLimit: 0.65
   upperLimit: 0.95
   lineRendererPrefab: {fileID: 4225181713977468843, guid: 6fbb66a0465cfbe498137d1e63747e55, type: 3}
+  renderLayer:
+    serializedVersion: 2
+    m_Bits: 5
 --- !u!1 &705507993
 GameObject:
   m_ObjectHideFlags: 0
@@ -282,7 +288,7 @@ Light:
   serializedVersion: 10
   m_Type: 1
   m_Shape: 0
-  m_Color: {r: 1, g: 0.95686275, b: 0.8392157, a: 1}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_Intensity: 0.49
   m_Range: 10
   m_SpotAngle: 30

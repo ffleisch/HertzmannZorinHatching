@@ -522,7 +522,7 @@ public class GenerateCrosshatch : MonoBehaviour
 				//var closest = queryGrid(Input.mousePosition, Vector2.up, true);
 				//var closestPoint = closest.OrderByDescending(x => (x.pos - (Vector2)Input.mousePosition).magnitude).First();
 
-				StreamlinePoint init = new StreamlinePoint(sp.pos, sp.d1, sp.d2, sp.d2);
+				StreamlinePoint init = new StreamlinePoint(sp.pos, sp.d2, sp.d1, sp.d2);
 				//StreamlinePoint init = allStreamlinePoints[0][0];
 				bfs.Enqueue(init);
 				init.marked = true;
@@ -541,7 +541,7 @@ public class GenerateCrosshatch : MonoBehaviour
 						if (!n.inQueue)
 						{
 
-							if ((current.pos - n.pos).magnitude < h.dSep)//TODO i removed a *2
+							if ((current.pos - n.pos).magnitude < h.dSep*1.1f)//TODO i removed a *2
 							{
 								if (!checkCriticalCurveIntersection(current.pos, n.pos))
 								{

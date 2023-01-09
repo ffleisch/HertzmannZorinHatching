@@ -39,7 +39,6 @@ public class Snapshot : MonoBehaviour
 
 
 
-	public Texture2D testOutput;
 
 	public void takeSnapshot()
 	{

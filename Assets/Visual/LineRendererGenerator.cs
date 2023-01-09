@@ -4,64 +4,71 @@ using UnityEngine;
 
 public class LineRendererGenerator : MonoBehaviour
 {
-	private GameObject lineRendererParent;
-	private Hatching h;
-	public void init(Hatching h)
-	{
-		lineRendererParent = new GameObject("AllLineRenderers");
-		this.h = h;
-	}
+    private GameObject lineRendererParent;
+    private Hatching h;
+    public void init(Hatching h)
+    {
+        lineRendererParent = new GameObject("AllLineRenderers");
+        this.h = h;
+    }
 
 
-	public void updateLineRenderers(List<Vector3[]> lines)
-	{
+    public void updateLineRenderers(List<Vector3[]> lines)
+    {
 
-		foreach (Transform t in lineRendererParent.transform)
-		{
-			GameObject.Destroy(t.gameObject);
-		}
-
-
-		var lineRenderers=lineRendererParent.GetComponentsInChildren<LineRenderer>();
-		
+        foreach (Transform t in lineRendererParent.transform)
+        {
+            GameObject.Destroy(t.gameObject);
+        }
 
 
-		for(int i=0;i<lines.Count;i++)
-		{
+        foreach (Transform t in lineRendererParent.transform)
+        {
+            GameObject.Destroy(t);
+        }
 
-			Vector3[] l = lines[i];
+        //var lineRenderers=lineRendererParent.GetComponentsInChildren<LineRenderer>();
 
 
 
-			LineRenderer lr;
-			if (i < lineRenderers.Length)
+
+        for (int i = 0; i < lines.Count; i++)
+        {
+
+            Vector3[] l = lines[i];
+
+
+
+            LineRenderer lr;
+			/*if (i < lineRenderers.Length)
 			{
 				lr = lineRenderers[i];
 			}
 			else
-			{
-				var newLr = Instantiate(h.lineRendererPrefab);
-				newLr.transform.parent = lineRendererParent.transform;
-				lr = newLr.GetComponent<LineRenderer>();
-				
-				lr.useWorldSpace = true;
-			}
-			
-			
-			lr.transform.parent = lineRendererParent.transform;
-			//   LineRenderer lr = LineRendererParent.AddComponent(typeof(LineRenderer))as LineRenderer;
+			{*/
+            var newLr = Instantiate(h.lineRendererPrefab);
+            newLr.transform.parent = lineRendererParent.transform;
+            lr = newLr.GetComponent<LineRenderer>();
+            lr.widthMultiplier = 0.01f;
+            lr.useWorldSpace = true;
+            //}
 
 
-			lr.positionCount = l.Length;
-			lr.SetPositions(l);
-
-		}
-
-	}
+            lr.transform.parent = lineRendererParent.transform;
+            //   LineRenderer lr = LineRendererParent.AddComponent(typeof(LineRenderer))as LineRenderer;
 
 
+            lr.positionCount = l.Length;
+            lr.SetPositions(l);
 
-	public void setCameraTransform(Camera cam) { 
-		
-	}
+        }
+
+    }
+
+
+
+    public void setCameraTransform(Camera cam)
+    {
+
+    }
 }

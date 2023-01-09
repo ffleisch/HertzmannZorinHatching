@@ -65,10 +65,13 @@ public class Hatching : MonoBehaviour
 	//public LineRenderer lineRenderer;
 	public GameObject lineRendererPrefab;
 
+	
+    [SerializeField] private LayerMask renderLayer=5;
+
 	void Start()
 	{
 
-		gameObject.layer =5;//TODO mybe make this configurable
+		gameObject.layer =renderLayer;//TODO mybe make this configurable
 
 		if (myCamera == null)
 		{
@@ -129,7 +132,6 @@ public class Hatching : MonoBehaviour
 
 		if (brightnessShader == null) {
 			brightnessShader =Shader.Find("Standard");
-		
 		}
 
 
@@ -140,7 +142,7 @@ public class Hatching : MonoBehaviour
 		directionTex = new Texture2D(myCamera.pixelWidth, myCamera.pixelHeight, TextureFormat.RGBAFloat, false);
 
 		brightnessRT = new RenderTexture(myCamera.pixelWidth, myCamera.pixelHeight, 16, RenderTextureFormat.ARGBFloat);
-		brightnessTex = new Texture2D(myCamera.pixelWidth, myCamera.pixelHeight, TextureFormat.RGBAFloat, false);
+		brightnessTex = new Texture2D(myCamera.pixelWidth, myCamera.pixelHeight, TextureFormat.RGBA32, false);
 		
 		directionSnapShot.init(directionRT, directionTex, myCamera);
 		brightnessSnapshot.init(brightnessRT, brightnessTex, myCamera);
