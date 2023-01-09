@@ -39,7 +39,6 @@ public class Hatching : MonoBehaviour
 	public int[] triangles;
 
 
-
 	RenderTexture directionRT;
 	[HideInInspector]
 	public Texture2D directionTex;
@@ -55,6 +54,7 @@ public class Hatching : MonoBehaviour
 
 
 	public Camera myCamera;
+	public Shader brightnessShader;
 
 	public float dSep = 10;
 	public float dTest = 0.5f;
@@ -67,6 +67,8 @@ public class Hatching : MonoBehaviour
 
 	void Start()
 	{
+
+		gameObject.layer =5;//TODO mybe make this configurable
 
 		if (myCamera == null)
 		{
@@ -125,8 +127,14 @@ public class Hatching : MonoBehaviour
 		directionSnapShot = gameObject.AddComponent<Snapshot>();
 		directionSnapShot.shader = Shader.Find("Unlit/CrossFieldShader");
 
+		if (brightnessShader == null) {
+			brightnessShader =Shader.Find("Standard");
+		
+		}
+
 
 		brightnessSnapshot = gameObject.AddComponent<Snapshot>();
+		brightnessSnapshot.shader = brightnessShader;
 
 		directionRT = new RenderTexture(myCamera.pixelWidth, myCamera.pixelHeight, 16, RenderTextureFormat.ARGBFloat);
 		directionTex = new Texture2D(myCamera.pixelWidth, myCamera.pixelHeight, TextureFormat.RGBAFloat, false);

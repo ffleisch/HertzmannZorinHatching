@@ -50,7 +50,7 @@ public class Snapshot : MonoBehaviour
 
 		myCam.clearFlags = CameraClearFlags.Color;
 		myCam.backgroundColor = new Color(0,0,0,0);
-
+		myCam.cullingMask =0b100000;
 		myCam.targetTexture = rt;
 		RenderTexture.active = rt;
 		myCam.RenderWithShader(shader, "");

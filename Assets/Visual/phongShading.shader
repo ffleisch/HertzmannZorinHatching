@@ -53,7 +53,7 @@ Shader "Unlit/phongShading"
 			{
 				// sample the texture
 
-				float3 lightDir = _WorldSpaceLightPos0.w ? normalize(_WorldSpaceLightPos0.xyz - i.vertex) : _WorldSpaceLightPos0.xyz;
+				float3 lightDir = _WorldSpaceLightPos0.w==0 ? normalize(_WorldSpaceLightPos0.xyz- i.vertex) : _WorldSpaceLightPos0.xyz;
 
 				
 
@@ -66,9 +66,9 @@ Shader "Unlit/phongShading"
 				float3 NdotH = dot(i.normal, halfWay);
 
 
-				float specular = _specular*pow(NdotH,_specularHardness);
+				float specular = min(_specular*pow(clamp(NdotH,0,1),_specularHardness),1);
 
-				float val = _ambient + _diffuse * NdotL + specular;
+				float val = clamp(_ambient + clamp(_diffuse,0,1) * NdotL + specular,0,1);
 				fixed4 col = float4(val,val,val,1);
 				return col;
 			}

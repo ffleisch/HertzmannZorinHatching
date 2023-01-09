@@ -7,8 +7,8 @@ Material:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: blinn_phong
-  m_Shader: {fileID: 4800000, guid: bc538511d682eab49826590a07daa2aa, type: 3}
+  m_Name: FlatColorMaterial
+  m_Shader: {fileID: 4800000, guid: 4d12682f4b0e3364d90d058f51e84cca, type: 3}
   m_ValidKeywords: []
   m_InvalidKeywords: []
   m_LightmapFlags: 4
@@ -74,11 +74,8 @@ Material:
     - _SrcBlend: 1
     - _UVSec: 0
     - _ZWrite: 1
-    - _ambient: 0.05
-    - _diffuse: 0.7
-    - _specular: 0.3
-    - _specularHardness: 48.6
     m_Colors:
     - _Color: {r: 1, g: 1, b: 1, a: 1}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
+    - _color: {r: 1, g: 1, b: 1, a: 0}
   m_BuildTextureStacks: []
