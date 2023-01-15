@@ -15,7 +15,7 @@ public class LineRendererGenerator : MonoBehaviour
 
     public void updateLineRenderers(List<Vector3[]> lines)
     {
-
+    /*
         foreach (Transform t in lineRendererParent.transform)
         {
             GameObject.Destroy(t.gameObject);
@@ -40,12 +40,9 @@ public class LineRendererGenerator : MonoBehaviour
 
 
             LineRenderer lr;
-			/*if (i < lineRenderers.Length)
-			{
-				lr = lineRenderers[i];
-			}
-			else
-			{*/
+	            
+            
+            
             var newLr = Instantiate(h.lineRendererPrefab);
             newLr.transform.parent = lineRendererParent.transform;
             lr = newLr.GetComponent<LineRenderer>();
@@ -61,7 +58,7 @@ public class LineRendererGenerator : MonoBehaviour
             lr.positionCount = l.Length;
             lr.SetPositions(l);
 
-        }
+        }*/
 
     }
 

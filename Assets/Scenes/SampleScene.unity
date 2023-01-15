@@ -157,7 +157,6 @@ MonoBehaviour:
   dTest: 0.8
   lowerLimit: 0.7
   upperLimit: 0.95
-  lineRendererPrefab: {fileID: 4225181713977468843, guid: 6fbb66a0465cfbe498137d1e63747e55, type: 3}
   renderLayer:
     serializedVersion: 2
     m_Bits: 5
@@ -256,7 +255,6 @@ MonoBehaviour:
   dTest: 0.5
   lowerLimit: 0.65
   upperLimit: 0.95
-  lineRendererPrefab: {fileID: 4225181713977468843, guid: 6fbb66a0465cfbe498137d1e63747e55, type: 3}
   renderLayer:
     serializedVersion: 2
     m_Bits: 5
@@ -430,8 +428,8 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 963194225}
-  m_LocalRotation: {x: 0.35650727, y: -0.26389158, z: 0.105707906, w: 0.8899942}
-  m_LocalPosition: {x: 25.000904, y: -3.2089443, z: -23.156672}
+  m_LocalRotation: {x: 0.045413334, y: -0.39651874, z: 0.019643845, w: 0.91669226}
+  m_LocalPosition: {x: 25.000881, y: -3.20895, z: -23.156681}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []

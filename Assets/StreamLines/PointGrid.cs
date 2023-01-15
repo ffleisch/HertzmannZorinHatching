@@ -34,6 +34,8 @@ public class StreamlinePoint
 	public bool inQueue;
 	public bool marked;
 	public int brightnessLevel;
+	public float lineWidth=1f;
+
 
 
 	public StreamlinePoint(Vector2 pos, Vector2 dir,Vector2 d1, Vector2 d2) : this(pos,d1,d2)

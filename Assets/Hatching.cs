@@ -17,7 +17,9 @@ public class Hatching : MonoBehaviour
 
 
 
-	LineRendererGenerator lineRendererGenerator;
+	//LineRendererGenerator lineRendererGenerator;
+	CustomLineRenderer customLinerenderer;
+
 
 	public float parabolicLimit = 0.1f;
 
@@ -63,7 +65,7 @@ public class Hatching : MonoBehaviour
 	public float upperLimit = 0.95f;
 
 	//public LineRenderer lineRenderer;
-	public GameObject lineRendererPrefab;
+	//public GameObject lineRendererPrefab;
 
 	
     [SerializeField] private LayerMask renderLayer=5;
@@ -82,19 +84,24 @@ public class Hatching : MonoBehaviour
 
 		contour = gameObject.AddComponent<Contour>();
 		crossFields = gameObject.AddComponent<CrossFields>();
-		lineRendererGenerator = gameObject.AddComponent<LineRendererGenerator>();
+		//lineRendererGenerator = gameObject.AddComponent<LineRendererGenerator>();
 
+
+		GameObject lineChild = new("LineMesh");
+		lineChild.transform.parent = transform;
+		customLinerenderer=lineChild.AddComponent<CustomLineRenderer>();
+		
 
 		MeshFilter mf = GetComponent<MeshFilter>();
 
-		if (lineRendererPrefab == null) {
+		/*if (lineRendererPrefab == null) {
 			Debug.LogError("Line Renderer not set");
 
 			GameObject go = new();
 			go.AddComponent<LineRenderer>();
 			lineRendererPrefab = go;
 			
-		}
+		}*/
 
 
 
@@ -152,7 +159,7 @@ public class Hatching : MonoBehaviour
 		generateCrosshatch.init(this, directionTex,brightnessTex);
 
 
-		lineRendererGenerator.init(this);
+		//lineRendererGenerator.init(this);
 	}
 
 
@@ -173,7 +180,9 @@ public class Hatching : MonoBehaviour
 			generateCrosshatch.generateHatches();
 			myCamera.transform.hasChanged = false;
 			transform.hasChanged = false;
-			lineRendererGenerator.updateLineRenderers(generateCrosshatch.generateLinerendererPoints());	
+
+			customLinerenderer.mf.mesh =generateCrosshatch.generateMixedLineMesh();
+			//lineRendererGenerator.updateLineRenderers(generateCrosshatch.generateLinerendererPoints());	
 		}
 
 
