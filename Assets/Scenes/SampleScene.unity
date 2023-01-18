@@ -153,8 +153,8 @@ MonoBehaviour:
   brightnessTex: {fileID: 0}
   myCamera: {fileID: 0}
   brightnessShader: {fileID: 0}
-  dSep: 10
-  dTest: 0.8
+  dSep: 8
+  dTest: 0.421
   lowerLimit: 0.7
   upperLimit: 0.95
   renderLayer:

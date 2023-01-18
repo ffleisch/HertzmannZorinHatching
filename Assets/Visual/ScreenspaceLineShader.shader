@@ -67,8 +67,8 @@ Shader "Unlit/ScreenspaceLineShader"
 					 normal =input[i].vertex.z*pixelWidth*float2(-normal.y,normal.x)/(len*len);
 					 
 					 normal /= _ScreenParams.xy;
-					 v1.vertex =float4( input[i].vertex.xy+ normal,0,1);
-					 v2.vertex =float4( input[i].vertex.xy- normal,0,1);
+					 v1.vertex =float4( input[i].vertex.xy+ normal,1,1);
+					 v2.vertex = float4(input[i].vertex.xy - normal, 1, 1);
 
 
 					 triStream.Append(v1);

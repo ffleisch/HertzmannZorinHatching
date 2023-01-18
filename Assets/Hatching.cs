@@ -22,7 +22,9 @@ public class Hatching : MonoBehaviour
 
 
 	public float parabolicLimit = 0.1f;
-
+	private float _parabolicLimit = 0;
+	//public float parabolicLimit { get { return _parabolicLimit; } set { _parabolicLimit = value;recalculateCrossfields();recalculateHatching(); } }
+	//private float _parabolicLimit = 0.05f;
 
 	[HideInInspector]
 	public Vector3[] e1;
@@ -48,7 +50,7 @@ public class Hatching : MonoBehaviour
 	RenderTexture brightnessRT;
 	[HideInInspector]
 	public Texture2D brightnessTex;
-	
+
 	[HideInInspector]
 	Snapshot directionSnapShot;
 	[HideInInspector]
@@ -58,22 +60,42 @@ public class Hatching : MonoBehaviour
 	public Camera myCamera;
 	public Shader brightnessShader;
 
-	public float dSep = 10;
-	public float dTest = 0.5f;
 
+	[Range(1,100)]
+	public float dSep = 10;
+	private float _dSep;
+
+	[Range(0.1f,1)]	
+	public float dTest = 0.5f;
+	private float _dTest;
+
+	[Range(0,1)]	
 	public float lowerLimit = 0.65f;
+	private float _lowerLimit;
+
+
+	[Range(0,1)]	
 	public float upperLimit = 0.95f;
+	private float _upperLimit;
+
 
 	//public LineRenderer lineRenderer;
 	//public GameObject lineRendererPrefab;
 
-	
-    [SerializeField] private LayerMask renderLayer=5;
+
+	[SerializeField] private LayerMask renderLayer = 5;
 
 	void Start()
 	{
 
-		gameObject.layer =renderLayer;//TODO mybe make this configurable
+		_dSep = dSep;
+		_dTest = dTest;
+		_lowerLimit = lowerLimit;
+		_upperLimit = upperLimit;
+		_parabolicLimit = parabolicLimit;
+
+
+		gameObject.layer = renderLayer;//TODO mybe make this configurable
 
 		if (myCamera == null)
 		{
@@ -89,8 +111,8 @@ public class Hatching : MonoBehaviour
 
 		GameObject lineChild = new("LineMesh");
 		lineChild.transform.parent = transform;
-		customLinerenderer=lineChild.AddComponent<CustomLineRenderer>();
-		
+		customLinerenderer = lineChild.AddComponent<CustomLineRenderer>();
+
 
 		MeshFilter mf = GetComponent<MeshFilter>();
 
@@ -108,7 +130,7 @@ public class Hatching : MonoBehaviour
 
 		if (mf == null)
 		{
-			Debug.LogError("No Meshcollider found");
+			Debug.LogError("No Meshfilter found");
 		}
 
 
@@ -127,18 +149,16 @@ public class Hatching : MonoBehaviour
 		contour.init();
 
 		contour.CalcContourSegments();
-		Debug.Log("Optmizing cross fields");
-		crossFields.init(this);
-		Debug.Log("Done optmizing cross fields");
-		mf.mesh.SetTangents(crossFields.mixedTangents);
 
+		recalculateCrossfields();
 
-
+			
 		directionSnapShot = gameObject.AddComponent<Snapshot>();
 		directionSnapShot.shader = Shader.Find("Unlit/CrossFieldShader");
 
-		if (brightnessShader == null) {
-			brightnessShader =Shader.Find("Standard");
+		if (brightnessShader == null)
+		{
+			brightnessShader = Shader.Find("Standard");
 		}
 
 
@@ -150,14 +170,14 @@ public class Hatching : MonoBehaviour
 
 		brightnessRT = new RenderTexture(myCamera.pixelWidth, myCamera.pixelHeight, 16, RenderTextureFormat.ARGBFloat);
 		brightnessTex = new Texture2D(myCamera.pixelWidth, myCamera.pixelHeight, TextureFormat.RGBA32, false);
-		
+
 		directionSnapShot.init(directionRT, directionTex, myCamera);
 		brightnessSnapshot.init(brightnessRT, brightnessTex, myCamera);
 
 		generateCrosshatch = gameObject.AddComponent<GenerateCrosshatch>();
 
-		generateCrosshatch.init(this, directionTex,brightnessTex);
-
+		generateCrosshatch.init(this, directionTex, brightnessTex);
+		
 
 		//lineRendererGenerator.init(this);
 	}
@@ -168,23 +188,82 @@ public class Hatching : MonoBehaviour
 	// Update is called once per frame
 	void Update()
 	{
+
+		bool doRecalculateHatching =false;
+		bool doRecalculateCrossfields = false;
+		bool doRecalculateHatchReduction = false;
+
 		if (myCamera.transform.hasChanged || transform.hasChanged)
 		{
+			doRecalculateHatching = true;
+			myCamera.transform.hasChanged = false;
+			transform.hasChanged = false;
+
+		}
+
+		if (_dSep!=dSep) {
+			_dSep = dSep;
+			doRecalculateHatching = true;
+		}
+
+		if (_dTest!=dTest) {
+			_dTest=dTest;
+			doRecalculateHatching = true;
+		}
+		if (_lowerLimit!=lowerLimit) {
+			_lowerLimit=lowerLimit;
+			doRecalculateHatchReduction=true;
+		}
+		if (_upperLimit!=upperLimit) {
+			_upperLimit=upperLimit;
+			doRecalculateHatchReduction=true;
+		}
+		if (_parabolicLimit!=parabolicLimit) {
+			_parabolicLimit=parabolicLimit;
+			doRecalculateCrossfields = true;
+		}
+
+		if (doRecalculateCrossfields) {
+			recalculateCrossfields();
+			recalculateHatching();
+		}
+		
+		if (doRecalculateHatching) {
+			recalculateHatching();
+		}
+
+		if ((!doRecalculateHatching)&& doRecalculateHatchReduction) {
+			recalculateReduceHatching();
+		}
+
+	}
+	void recalculateHatching()
+	{
 			contour.CalcContourSegments();
-
-
-
 			directionSnapShot.takeSnapshot();
 			brightnessSnapshot.takeSnapshot();
 
 			generateCrosshatch.generateHatches();
-			myCamera.transform.hasChanged = false;
-			transform.hasChanged = false;
+			customLinerenderer.mf.mesh = generateCrosshatch.generateMixedLineMesh();
 
-			customLinerenderer.mf.mesh =generateCrosshatch.generateMixedLineMesh();
-			//lineRendererGenerator.updateLineRenderers(generateCrosshatch.generateLinerendererPoints());	
-		}
-
+					//lineRendererGenerator.updateLineRenderers(generateCrosshatch.generateLinerendererPoints());	
 
 	}
+
+	void recalculateCrossfields() { 
+		
+		MeshFilter mf = GetComponent<MeshFilter>();
+		Debug.Log("Optmizing cross fields");
+		crossFields.init(this);
+		Debug.Log("Done optmizing cross fields");
+		mf.mesh.SetTangents(crossFields.mixedTangents);
+
+	}
+
+	void recalculateReduceHatching() {
+		generateCrosshatch.reduceHatches();
+	
+		customLinerenderer.mf.mesh = generateCrosshatch.generateMixedLineMesh();
+	}
+
 }
