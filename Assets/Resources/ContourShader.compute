@@ -109,8 +109,10 @@ void GenerateContourSegments(uint3 id : SV_DispatchThreadID)
 			//UNITY_NEAR_CLIP_VALUE would be nice to ave
 			//discard contour segments, which are not in view
 			results[id.x].containsSegment *= (-1<=p1.x&&p1.x<=1&& -1<=p1.y&&p1.y<=1&&0<=p1.z&&p1.z<=1)||(-1<=p2.x&&p2.x<=1&& -1<=p2.y&&p2.y<=1&&0<=p2.z&&p2.z<=1);
-			results[id.x].screenStart = (p1.xy+1)*wh_half;
-			results[id.x].screenEnd = (p2.xy+1)*wh_half;
+			//results[id.x].screenStart = (p1.xy+1)*wh_half;
+			//results[id.x].screenEnd = (p2.xy+1)*wh_half;
+			results[id.x].screenStart = p1.xy;
+			results[id.x].screenEnd = p2.xy;
 		}
 
 	}

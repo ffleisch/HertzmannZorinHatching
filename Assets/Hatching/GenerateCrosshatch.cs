@@ -489,7 +489,7 @@ public class GenerateCrosshatch : MonoBehaviour
 		return outp;
 	}
 
-	enum START_OR_ENDPOINT {
+	internal enum START_OR_ENDPOINT {
 		START = 1,
 		END=2
 	
@@ -522,6 +522,7 @@ public class GenerateCrosshatch : MonoBehaviour
 			void addPointToVertexList(StreamlinePoint sp, int endPieceVal)
 			{
 				vertices.Add(new Vector3(2 * sp.pos.x / (w) - 1, -2 * sp.pos.y / (h) + 1,sp.lineWidth * (endPieceVal != 0 ? 0 : 1)));//,
+				//vertices.Add(new Vector3(sp.pos.x ,1-sp.pos.y,sp.lineWidth * (endPieceVal != 0 ? 0 : 1)));//,
 				endPiece.Add(new Vector2(endPieceVal, 0));
 				allMarkings.Add(sp.marked);
 			}
@@ -543,7 +544,6 @@ public class GenerateCrosshatch : MonoBehaviour
 					currentStreamlinePoint = nextStreamlinePoint;
 					continue;
 				}
-				Debug.Log(i);
 				//bool isEndpiece =(i==0||i==(l.Count-1));
 				bool isStartpiece = (lastStreamlinePoint.marked) && (!currentStreamlinePoint.marked);
 				bool IsEndPiece = (!currentStreamlinePoint.marked) && (nextStreamlinePoint.marked);
@@ -572,12 +572,7 @@ public class GenerateCrosshatch : MonoBehaviour
 
 		}
 
-		foreach (var l in this.h.contour.getOutlineLines()) {
-			int i = 0;
-			
-			foreach ();
-		}
-
+		this.h.contour.addMyMixedVertices(ref vertices,ref endPiece);
 
 		for (int i = 0; i < vertices.Count; i++)
 		{
@@ -642,6 +637,7 @@ public class GenerateCrosshatch : MonoBehaviour
 			foreach (var sp in l)
 			{
 				sp.inQueue = false;
+				sp.marked = false;
 				Color col = getColorFromImage(sp.pos);
 
 				sp.brightnessLevel = brightnessTransferFunction(col);

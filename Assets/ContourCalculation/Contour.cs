@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEditor;
 using UnityEngine;
-
+using static GenerateCrosshatch;
 
 interface IIntersectionProvider
 {
@@ -224,7 +224,7 @@ public class Contour : MonoBehaviour
 		cs.SetVector("cameraPos", transform.InverseTransformPoint(Camera.main.transform.position));
 		cs.SetMatrix("objectToClipSpace", Camera.main.projectionMatrix * Camera.main.worldToCameraMatrix * transform.localToWorldMatrix);
 
-		cs.SetVector("wh_half",new Vector2(Camera.main.pixelWidth,Camera.main.pixelHeight)/2.0f);
+		//cs.SetVector("wh_half",new Vector2(Camera.main.pixelWidth,Camera.main.pixelHeight)/2.0f);
 
 		cs.GetKernelThreadGroupSizes(kernelId, out threadGroupSizes, out _, out _);
 
@@ -378,9 +378,10 @@ public class Contour : MonoBehaviour
 		foreach (var line in outline)
 		{
 			int last_p = -1;
-			foreach ((int p,_) in line)
+			foreach ((int p, _) in line)
 			{
-				if (last_p == -1) {
+				if (last_p == -1)
+				{
 					last_p = p;
 					continue;
 				}
@@ -395,16 +396,65 @@ public class Contour : MonoBehaviour
 
 	private List<List<(int, RaycastSeed)>> outline = new();
 
-	public IEnumerable<IEnumerable<Vector3>> getOutlineLines() {
-		foreach (var l in outline) {
-			
-			yield return l.Select<(int,RaycastSeed),UnityEngine.Vector3>(item=>(intersections.GraphNodes[item.Item1]));
+	public IEnumerable<IEnumerable<Vector3>> getOutlineLines()
+	{
+		foreach (var l in outline)
+		{
+
+			yield return l.Select<(int, RaycastSeed), UnityEngine.Vector3>(item => (intersections.GraphNodes[item.Item1]));
 		}
-	
-	
+
+
 	}
+
+	//append the vertices to the given array, such that they can be rendered by the custom line renderer
+	public void addMyMixedVertices(ref List<Vector3> vertices, ref List<Vector2> endPoints)
+	{
+
+		foreach (var l in outline) {
+		var testList = new List<Vector2>();
+		int lastIndex = -1;
+		int i = 0;
+		int n = l.Count-1;
+		foreach (var p in l)
+		{
+			if (p.Item1 == lastIndex)
+			{
+				n--;
+				continue;
+			}
+
+			if (i == 0)
+			{
+				endPoints.Add(new Vector2((int)START_OR_ENDPOINT.START, 0));
+				testList.Add(new Vector2((int)START_OR_ENDPOINT.START, 0));
+			}
+			else
+			if (i == n)
+			{
+
+				endPoints.Add(new Vector2((int)START_OR_ENDPOINT.END, 0));
+				testList.Add(new Vector2((int)START_OR_ENDPOINT.END, 0));
+			}
+			else
+			{
+				endPoints.Add(Vector2.zero);
+				testList.Add(Vector2.zero);
+			}
+
+			Vector3 point = intersections.GraphNodes[p.Item1];
+			point.z = 1;
+			point.y = -point.y;
+			vertices.Add(point);
+			lastIndex = p.Item1;
+			i++;
+		}//todo teilweise sehr hacky
+		}
+
+	}
+
 	//Debug.Log(Camera.main.ScreenToViewportPoint(new Vector2(Camera.main.pixelHeight,Camera.main.pixelWidth)));
-	static bool drawContour=false;
+	static bool drawContour = true;
 	private void OnDrawGizmos()
 	{
 		/*if (contours != null)
@@ -441,7 +491,7 @@ public class Contour : MonoBehaviour
 
 			float mult = Mathf.Tan(Mathf.PI * Camera.main.fieldOfView / 360f);
 			Matrix4x4 flatMatrix = Camera.main.cameraToWorldMatrix * Matrix4x4.Translate(-Vector3.forward) * Matrix4x4.Scale(new Vector3(Camera.main.aspect * mult, mult, 1)); //* Matrix4x4.Scale(new Vector3(1, Camera.main.pixelHeight / (float)Camera.main.pixelWidth, 1));
-
+																																											   //flatMatrix =flatMatrix* Matrix4x4.Scale(new Vector3(Camera.main.pixelWidth/2,Camera.main.pixelHeight/2,1))*Matrix4x4.Translate(new Vector3(1,1,0));
 
 			if (drawContour)
 			{
@@ -470,13 +520,14 @@ public class Contour : MonoBehaviour
 					i += 1;
 				}
 			}
-			/*
-            int num = 0;
-            Handles.color = Color.black;
-            foreach (var p in intersections.GraphNodes) {
-                Handles.DrawWireCube(p, Vector3.one * 0.01f * ((1 + num % 9) / 10f));
-                num++;
-            }*/
+
+			int num = 0;
+			Handles.color = Color.black;
+			foreach (var p in intersections.GraphNodes)
+			{
+				Handles.DrawWireCube(p, Vector3.one * 0.01f * ((1 + num % 9) / 10f));
+				num++;
+			}
 
 
 
