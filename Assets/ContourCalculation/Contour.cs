@@ -374,7 +374,7 @@ public class Contour : MonoBehaviour
         }
 
         contourCollisionTree = new();
-        //TODO untested
+
         foreach (var line in outline)
         {
             int last_p = -1;

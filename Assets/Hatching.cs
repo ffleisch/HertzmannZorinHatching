@@ -175,9 +175,9 @@ public class Hatching : MonoBehaviour
         brightnessSnapshot.init(brightnessRT, brightnessTex, myCamera);
 
 
-        directionSnapShot.cullingMask = 1<<renderLayer;
-        brightnessSnapshot.cullingMask = 1<<renderLayer;
-        myCamera.cullingMask = ~(1<<renderLayer);
+        directionSnapShot.cullingMask = 1 << renderLayer;
+        brightnessSnapshot.cullingMask = 1 << renderLayer;
+        myCamera.cullingMask = ~(1 << renderLayer);
 
 
         generateCrosshatch = gameObject.AddComponent<GenerateCrosshatch>();
@@ -236,15 +236,20 @@ public class Hatching : MonoBehaviour
             doRecalculateCrossfields = true;
         }
 
-        if (_brightnessMaterial != brightnessMaterial) {
+        if (_brightnessMaterial != brightnessMaterial)
+        {
             _brightnessMaterial = brightnessMaterial;
 
-        
+
             doRecalculateHatchReduction = true;
+            if (brightnessMaterial == null)
+            {
+                brightnessMaterial = new Material(Shader.Find("Standard"));
+            }
 
             brightnessSnapshot.shader = brightnessMaterial.shader;
             brightnessSnapshot.takeSnapshot();
-            
+
         }
 
 
@@ -271,8 +276,8 @@ public class Hatching : MonoBehaviour
         directionSnapShot.takeSnapshot();
 
 
-        MeshRenderer mr =gameObject.GetComponent<MeshRenderer>();
-        Material oldMat=mr.material;
+        MeshRenderer mr = gameObject.GetComponent<MeshRenderer>();
+        Material oldMat = mr.material;
         mr.material = brightnessMaterial;
         brightnessSnapshot.shader = brightnessMaterial.shader;
 
@@ -282,7 +287,7 @@ public class Hatching : MonoBehaviour
         generateCrosshatch.generateHatches();
         customLinerenderer.mf.mesh = generateCrosshatch.generateMixedLineMesh();
 
-        customLinerenderer.transform.position =myCamera.ViewportToWorldPoint(new Vector3(0.5f,0.5f,(myCamera.nearClipPlane+myCamera.farClipPlane)/2f));
+        customLinerenderer.transform.position = myCamera.ViewportToWorldPoint(new Vector3(0.5f, 0.5f, (myCamera.nearClipPlane + myCamera.farClipPlane) / 2f));
         //lineRendererGenerator.updateLineRenderers(generateCrosshatch.generateLinerendererPoints());	
 
     }
@@ -304,7 +309,7 @@ public class Hatching : MonoBehaviour
 
         customLinerenderer.mf.mesh = generateCrosshatch.generateMixedLineMesh();
 
-        customLinerenderer.transform.position =myCamera.ViewportToWorldPoint(new Vector3(0.5f,0.5f,(myCamera.nearClipPlane+myCamera.farClipPlane)/2f));
+        customLinerenderer.transform.position = myCamera.ViewportToWorldPoint(new Vector3(0.5f, 0.5f, (myCamera.nearClipPlane + myCamera.farClipPlane) / 2f));
     }
 
 }

@@ -9,6 +9,7 @@ struct resultBufferStructure {
 	float2 screenStart;
 	float2 screenEnd;
 	int containsSegment;
+
 };
 
 Buffer<float3> vertices;
