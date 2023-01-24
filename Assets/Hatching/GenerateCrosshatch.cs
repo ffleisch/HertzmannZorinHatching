@@ -260,11 +260,15 @@ public class GenerateCrosshatch : MonoBehaviour
 					continue;
 
 				}
-				if (!p.marked && !pLast.marked)
-				{
+				Handles.color =Color.HSVToRGB((p.testIndex%7)/7f,1,1);
+
+				//if (!p.marked && !pLast.marked)
+				//{
+
+				if(p.testIndex!=0)
 					Handles.DrawLine(p.pos, pLast.pos);
 
-				}
+				//}
 
 				pLast = p;
 			}
@@ -626,7 +630,8 @@ public class GenerateCrosshatch : MonoBehaviour
 		float brightness = (c[0] + c[1] + c[2]) / 3.0f;
 
 		if (brightness < h.lowerLimit) { return map(brightness, 0, h.lowerLimit, 1, 0.5f); }
-		if (brightness < h.upperLimit) { return map(brightness, h.lowerLimit, h.upperLimit, 0.5f, 0.1f); }
+		if (brightness < h.upperLimit) { return map(brightness, h.lowerLimit, h.upperLimit, 0.5f, 0f); }
+
 		return 0.1f;
 	}
 
@@ -644,6 +649,7 @@ public class GenerateCrosshatch : MonoBehaviour
 				sp.lineWidth = brightnessToWidth(col);
 			}
 		}
+		int testIndex = 0;
 		foreach (var l in streamlines)
 		{
 			foreach (var sp in l)
@@ -652,6 +658,7 @@ public class GenerateCrosshatch : MonoBehaviour
 				{
 					continue;
 				}
+				testIndex += 1;
 				Queue<StreamlinePoint> bfs = new();
 				//var closest = queryGrid(Input.mousePosition, Vector2.up, true);
 				//var closestPoint = closest.OrderByDescending(x => (x.pos - (Vector2)Input.mousePosition).magnitude).First();
@@ -661,7 +668,6 @@ public class GenerateCrosshatch : MonoBehaviour
 				bfs.Enqueue(init);
 				init.marked = true;
 				init.inQueue = true;
-
 				while (bfs.Count > 0)
 				{
 					StreamlinePoint current = bfs.Dequeue();
@@ -675,7 +681,7 @@ public class GenerateCrosshatch : MonoBehaviour
 						if (!n.inQueue)
 						{
 
-							if ((current.pos - n.pos).magnitude < h.dSep * 1.1f)//TODO i removed a *2
+							if ((current.pos - n.pos).magnitude < h.dSep*2f)//TODO i removed a *2
 							{
 								if (!checkCriticalCurveIntersection(current.pos, n.pos))
 								{
@@ -692,6 +698,7 @@ public class GenerateCrosshatch : MonoBehaviour
 
 									if (n.marked&&n.brightnessLevel==1)
 									{
+										n.testIndex = testIndex;
 										bfs.Enqueue(n);
 									}
 									n.inQueue = true;
@@ -715,7 +722,7 @@ public class GenerateCrosshatch : MonoBehaviour
 				}
 			}
 		}
-		Debug.Log("touched " + n_seen + " points");
+		//Debug.Log("touched " + n_seen + " points");
 
 	}
 

@@ -2,8 +2,8 @@ Shader "Unlit/ScreenspaceLineShader"
 {
 	Properties
 	{
-		col("Color",Color)=(0,0,0,1)
-		pixelWidth("Line Width",float) = 5
+		_col ("Color",Color)=(0,0,0,1)
+		_pixelWidth ("Line Width",Float) = 5
 	}
 		SubShader
 	{
@@ -39,8 +39,8 @@ Shader "Unlit/ScreenspaceLineShader"
 				float4 vertex : POSITION;
 			};
 
-			uniform float pixelWidth;
-			uniform float4 col;
+			uniform float _pixelWidth;
+			uniform float4 _col;
 			//[maxvertexcount(4)]
 			//void geom(lineadj input[4], inout TriangleStream<g2f> triStream) {
 
@@ -72,7 +72,7 @@ Shader "Unlit/ScreenspaceLineShader"
 						 triStream.RestartStrip();
 						 return; // normal = normalize(normal) * 0.1f;
 					 }
-					 normal =input[i].vertex.z*pixelWidth*float2(-normal.y,normal.x)/(len*len);
+					 normal =input[i].vertex.z*_pixelWidth*float2(-normal.y,normal.x)/(len*len);
 					 
 					 normal /= _ScreenParams.xy;
 
@@ -105,7 +105,7 @@ Shader "Unlit/ScreenspaceLineShader"
 			{
 			// sample the texture
 			// apply fog
-			return col;
+			return _col;
 		}
 		ENDCG
 	}

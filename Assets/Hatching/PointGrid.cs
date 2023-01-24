@@ -33,6 +33,10 @@ public class StreamlinePoint
 	static float[,] rotate_45_left = { { 0.70710678118f, -0.70710678118f }, { 0.70710678118f, 0.70710678118f } };
 	public bool inQueue;
 	public bool marked;
+
+	public int testIndex;
+
+
 	public int brightnessLevel;
 	public float lineWidth=1f;
 

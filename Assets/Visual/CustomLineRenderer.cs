@@ -5,6 +5,8 @@ using UnityEngine;
 public class CustomLineRenderer : MonoBehaviour
 {
     public MeshFilter mf;
+    private Material LineMaterial;
+    private MeshRenderer mr;
     // Start is called before the first frame update
     void Start()
     {
@@ -12,13 +14,18 @@ public class CustomLineRenderer : MonoBehaviour
         if (mf == null) {
             mf=gameObject.AddComponent<MeshFilter>();
         }
-        MeshRenderer mr =GetComponent<MeshRenderer>();
+        mr =GetComponent<MeshRenderer>();
         if (mr == null) {
             mr = gameObject.AddComponent<MeshRenderer>();
         }
-        Material LineMaterial = (Material)Resources.Load("ScreenspaceLineMaterial", typeof(Material));
+        LineMaterial = Instantiate((Material)Resources.Load("ScreenspaceLineMaterial", typeof(Material)));
 
         mr.material = LineMaterial;
+    }
+
+
+    public void setLineWidth(float width) {
+        mr.material.SetFloat("_pixelWidth",width);
     }
 
     // Update is called once per frame

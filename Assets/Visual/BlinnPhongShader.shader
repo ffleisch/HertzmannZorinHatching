@@ -58,10 +58,14 @@ Shader "BASICxSHADER/Lighting/Blinn-Phong" {
 
         // Color
         fixed3 ambient = float3(0,0,0);//UNITY_LIGHTMODEL_AMBIENT.rgb * _DiffuseColor.rgb;
-        fixed3 diffuse  = _LightColor0.rgb * _DiffuseColor.rgb * NdotL;
-        fixed3 specular = _LightColor0.rgb * _SpecularColor.rgb * pow(NdotH, _Shininess);
+        fixed3 diffuse  = float3(0.5,0.5,0.5) * NdotL;
+        fixed3 specular = float3(0.5,0.5,0.5)* pow(NdotH, 20);
         fixed4 color = fixed4(ambient + diffuse + specular, 1.0);
 
+        //fixed3 ambient = float3(0,0,0);//UNITY_LIGHTMODEL_AMBIENT.rgb * _DiffuseColor.rgb;
+        //fixed3 diffuse  = _LightColor0.rgb * _DiffuseColor.rgb * NdotL;
+        //fixed3 specular = _LightColor0.rgb * _SpecularColor.rgb * pow(NdotH, _Shininess);
+        //fixed4 color = fixed4(ambient + diffuse + specular, 1.0);
         return color;
       }
       ENDCG

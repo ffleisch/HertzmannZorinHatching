@@ -152,11 +152,12 @@ MonoBehaviour:
   directionTex: {fileID: 0}
   brightnessTex: {fileID: 0}
   myCamera: {fileID: 0}
-  brightnessShader: {fileID: 0}
-  dSep: 8
+  brightnessMaterial: {fileID: 0}
+  dSep: 4
   dTest: 0.421
-  lowerLimit: 0.7
-  upperLimit: 0.95
+  lowerLimit: 0.385
+  upperLimit: 0.713
+  lineWidth: 5
   renderLayer:
     serializedVersion: 2
     m_Bits: 5
@@ -173,15 +174,15 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 92d79162b1779cc49b048042e6329dac, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 17
+      value: 5.6
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 92d79162b1779cc49b048042e6329dac, type: 3}
       propertyPath: m_LocalPosition.y
-      value: -12.6
+      value: -15.1
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 92d79162b1779cc49b048042e6329dac, type: 3}
       propertyPath: m_LocalPosition.z
-      value: -6.2
+      value: -4.2
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 92d79162b1779cc49b048042e6329dac, type: 3}
       propertyPath: m_LocalRotation.w
@@ -211,6 +212,14 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: -90
       objectReference: {fileID: 0}
+    - target: {fileID: -7511558181221131132, guid: 92d79162b1779cc49b048042e6329dac, type: 3}
+      propertyPath: m_Materials.Array.size
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: -7511558181221131132, guid: 92d79162b1779cc49b048042e6329dac, type: 3}
+      propertyPath: m_Materials.Array.data[0]
+      value: 
+      objectReference: {fileID: 10303, guid: 0000000000000000f000000000000000, type: 0}
     - target: {fileID: 919132149155446097, guid: 92d79162b1779cc49b048042e6329dac, type: 3}
       propertyPath: m_Name
       value: Knot-8-11_thin
@@ -250,11 +259,12 @@ MonoBehaviour:
   directionTex: {fileID: 0}
   brightnessTex: {fileID: 0}
   myCamera: {fileID: 0}
-  brightnessShader: {fileID: 0}
+  brightnessMaterial: {fileID: 0}
   dSep: 10
   dTest: 0.5
   lowerLimit: 0.65
   upperLimit: 0.95
+  lineWidth: 5
   renderLayer:
     serializedVersion: 2
     m_Bits: 5

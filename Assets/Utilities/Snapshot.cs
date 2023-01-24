@@ -26,9 +26,10 @@ public class Snapshot : MonoBehaviour
 	public RenderTexture rt;
 	public Shader shader;
 	public Camera referenceCam;
+	public int cullingMask;
 	private static Camera myCam;
 
-	private Texture2D tex;
+	public Texture2D tex;
 
 	public void init(RenderTexture rt,Texture2D tex,Camera referenceCam)
 	{
@@ -49,7 +50,7 @@ public class Snapshot : MonoBehaviour
 
 		myCam.clearFlags = CameraClearFlags.Color;
 		myCam.backgroundColor = new Color(0,0,0,0);
-		myCam.cullingMask =0b100000;
+		myCam.cullingMask =cullingMask;
 		myCam.targetTexture = rt;
 		RenderTexture.active = rt;
 		myCam.RenderWithShader(shader, "");
