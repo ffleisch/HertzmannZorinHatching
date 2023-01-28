@@ -50,9 +50,10 @@ public class Contour : MonoBehaviour
 
     }
 
-
-    public void init()
+    private Camera myCamera;
+    public void init(Camera c)
     {
+        myCamera = c;
         //load the compute shader
         cs = Resources.Load<ComputeShader>("ContourShader");
         kernelId = cs.FindKernel("GenerateContourSegments");
@@ -155,13 +156,13 @@ public class Contour : MonoBehaviour
         }
 
 
-        public bool testVisibility()
+        public bool testVisibility(Camera c)
         {
             if (wasEvaluated) return visible;
 
             Vector3 root = superInstance.transform.TransformPoint(position + 0.01f * normal);
             RaycastHit hit;
-            Vector3 camPos = Camera.main.transform.position;
+            Vector3 camPos = c.transform.position;
             Ray r = new Ray(root, camPos - root);
             visible = !superInstance.mc.Raycast(r, out hit, Vector3.Magnitude(camPos - root) + 0.01f);
             return visible;
@@ -221,10 +222,10 @@ public class Contour : MonoBehaviour
 
 
         //pass the camera position in object coordinates to the shader for contour calculation
-        cs.SetVector("cameraPos", transform.InverseTransformPoint(Camera.main.transform.position));
-        cs.SetMatrix("objectToClipSpace", Camera.main.projectionMatrix * Camera.main.worldToCameraMatrix * transform.localToWorldMatrix);
+        cs.SetVector("cameraPos", transform.InverseTransformPoint(myCamera.transform.position));
+        cs.SetMatrix("objectToClipSpace", myCamera.projectionMatrix * myCamera.worldToCameraMatrix * transform.localToWorldMatrix);
 
-        cs.SetVector("wh_half",new Vector2(Camera.main.pixelWidth,Camera.main.pixelHeight)/2.0f);
+        cs.SetVector("wh_half",new Vector2(myCamera.pixelWidth,myCamera.pixelHeight)/2.0f);
 
         cs.GetKernelThreadGroupSizes(kernelId, out threadGroupSizes, out _, out _);
 
@@ -290,7 +291,7 @@ public class Contour : MonoBehaviour
                 }
             }
             else
-            //Debug.Log(Camera.main.ScreenToViewportPoint(new Vector2(Camera.main.pixelHeight,Camera.main.pixelWidth)));
+            //Debug.Log(myCamera.ScreenToViewportPoint(new Vector2(myCamera.pixelHeight,myCamera.pixelWidth)));
             {
                 List<(int, RaycastSeed)> l = new();
                 outline.Add(l);
@@ -362,7 +363,7 @@ public class Contour : MonoBehaviour
             int visibleSum = 0;
             foreach ((_, RaycastSeed s) in l)
             {
-                visibleSum += s.testVisibility() ? 1 : 0;
+                visibleSum += s.testVisibility(myCamera) ? 1 : 0;
             }
 
             float score = (float)visibleSum / l.Count;
@@ -410,8 +411,8 @@ public class Contour : MonoBehaviour
     //append the vertices to the given array, such that they can be rendered by the custom line renderer
     public void addMyMixedVertices(ref List<Vector3> vertices, ref List<Vector2> endPoints)
     {
-        float w =Camera.main.pixelWidth;
-        float h =Camera.main.pixelHeight;
+        float w =myCamera.pixelWidth;
+        float h =myCamera.pixelHeight;
 
 
         foreach (var l in outline)
@@ -461,7 +462,7 @@ public class Contour : MonoBehaviour
 
     }
 
-    //Debug.Log(Camera.main.ScreenToViewportPoint(new Vector2(Camera.main.pixelHeight,Camera.main.pixelWidth)));
+    //Debug.Log(myCamera.ScreenToViewportPoint(new Vector2(myCamera.pixelHeight,myCamera.pixelWidth)));
     static bool drawContour = true;
     private void OnDrawGizmos()
     {
@@ -479,7 +480,7 @@ public class Contour : MonoBehaviour
         /*if (bo != null)
         {
             //TODO this better
-            Handles.matrix = Camera.main.cameraToWorldMatrix * Matrix4x4.Translate(-Vector3.forward) * Matrix4x4.Scale(new Vector3(1, Camera.main.pixelHeight / (float)Camera.main.pixelWidth, 1));
+            Handles.matrix = myCamera.cameraToWorldMatrix * Matrix4x4.Translate(-Vector3.forward) * Matrix4x4.Scale(new Vector3(1, myCamera.pixelHeight / (float)myCamera.pixelWidth, 1));
 
             //bo.debugDraw();
             Handles.color = Color.black;
@@ -497,9 +498,9 @@ public class Contour : MonoBehaviour
         if (intersections != null)
         {
 
-            float mult = Mathf.Tan(Mathf.PI * Camera.main.fieldOfView / 360f);
-            Matrix4x4 flatMatrix = Camera.main.cameraToWorldMatrix * Matrix4x4.Translate(-Vector3.forward) * Matrix4x4.Scale(new Vector3(Camera.main.aspect * mult, mult, 1)); //* Matrix4x4.Scale(new Vector3(1, Camera.main.pixelHeight / (float)Camera.main.pixelWidth, 1));
-            //flatMatrix =flatMatrix* Matrix4x4.Scale(new Vector3(Camera.main.pixelWidth/2,Camera.main.pixelHeight/2,1))*Matrix4x4.Translate(new Vector3(1,1,0));
+            float mult = Mathf.Tan(Mathf.PI * myCamera.fieldOfView / 360f);
+            Matrix4x4 flatMatrix = myCamera.cameraToWorldMatrix * Matrix4x4.Translate(-Vector3.forward) * Matrix4x4.Scale(new Vector3(myCamera.aspect * mult, mult, 1)); //* Matrix4x4.Scale(new Vector3(1, myCamera.pixelHeight / (float)myCamera.pixelWidth, 1));
+            //flatMatrix =flatMatrix* Matrix4x4.Scale(new Vector3(myCamera.pixelWidth/2,myCamera.pixelHeight/2,1))*Matrix4x4.Translate(new Vector3(1,1,0));
 
             if (drawContour)
             {

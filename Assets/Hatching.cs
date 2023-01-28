@@ -86,6 +86,9 @@ public class Hatching : MonoBehaviour
 
     public int renderLayer = 5;
 
+
+    private Vector2 _resolution;
+
     void Start()
     {
 
@@ -146,7 +149,7 @@ public class Hatching : MonoBehaviour
         MeshCurvature.ComputePointAndCornerAreas(vertices, triangles, out pointAreas, out cornerAreas);
         MeshCurvature.ComputeCurvature(vertices, normals, triangles, pointAreas, cornerAreas, out e1, out e2, out k1, out k2);
 
-        contour.init();
+        contour.init(myCamera);
 
         contour.CalcContourSegments();
 
@@ -165,15 +168,8 @@ public class Hatching : MonoBehaviour
         brightnessSnapshot = gameObject.AddComponent<Snapshot>();
         brightnessSnapshot.shader = brightnessMaterial.shader;
 
-        directionRT = new RenderTexture(myCamera.pixelWidth, myCamera.pixelHeight, 16, RenderTextureFormat.ARGBFloat);
-        directionTex = new Texture2D(myCamera.pixelWidth, myCamera.pixelHeight, TextureFormat.RGBAFloat, false);
-
-        brightnessRT = new RenderTexture(myCamera.pixelWidth, myCamera.pixelHeight, 16, RenderTextureFormat.Default);
-        brightnessTex = new Texture2D(myCamera.pixelWidth, myCamera.pixelHeight, TextureFormat.RGBA32, false);
-
-        directionSnapShot.init(directionRT, directionTex, myCamera);
-        brightnessSnapshot.init(brightnessRT, brightnessTex, myCamera);
-
+        setRenderTextures();
+        _resolution = new Vector2(myCamera.pixelWidth,myCamera.pixelHeight);
 
         directionSnapShot.cullingMask = 1 << renderLayer;
         brightnessSnapshot.cullingMask = 1 << renderLayer;
@@ -188,6 +184,19 @@ public class Hatching : MonoBehaviour
         //lineRendererGenerator.init(this);
     }
 
+
+    void setRenderTextures() { 
+        directionRT = new RenderTexture(myCamera.pixelWidth, myCamera.pixelHeight, 16, RenderTextureFormat.ARGBFloat);
+        directionTex = new Texture2D(myCamera.pixelWidth, myCamera.pixelHeight, TextureFormat.RGBAFloat, false);
+
+        brightnessRT = new RenderTexture(myCamera.pixelWidth, myCamera.pixelHeight, 16, RenderTextureFormat.Default);
+        brightnessTex = new Texture2D(myCamera.pixelWidth, myCamera.pixelHeight, TextureFormat.RGBA32, false);
+
+
+        directionSnapShot.init(directionRT, directionTex, myCamera);
+        brightnessSnapshot.init(brightnessRT, brightnessTex, myCamera);
+    
+    }
 
 
 
@@ -251,6 +260,16 @@ public class Hatching : MonoBehaviour
             brightnessSnapshot.takeSnapshot();
 
         }
+
+        Vector2 currentReesolution =new Vector2(myCamera.pixelWidth,myCamera.pixelHeight);
+        if (_resolution != currentReesolution) {
+            _resolution = currentReesolution;
+
+            setRenderTextures();
+            generateCrosshatch.init(this,directionTex,brightnessTex);
+            doRecalculateHatching = true;
+        }
+
 
 
         if (doRecalculateCrossfields)

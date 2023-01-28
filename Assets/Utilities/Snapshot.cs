@@ -33,6 +33,15 @@ public class Snapshot : MonoBehaviour
 
 	public void init(RenderTexture rt,Texture2D tex,Camera referenceCam)
 	{
+
+		if (this.rt != null) {
+			this.rt.Release();
+		}
+
+		if (this.tex != null) {
+			Destroy(this.tex);
+		}
+
 		this.rt = rt;
 		this.tex = tex;
 		this.referenceCam = referenceCam;
