@@ -157,7 +157,7 @@ MonoBehaviour:
   dTest: 0.429
   lowerLimit: 0.827
   upperLimit: 0.713
-  lineWidth: 5
+  lineWidth: 0.9
   renderLayer: 5
 --- !u!1001 &348551640
 PrefabInstance:
@@ -172,7 +172,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 92d79162b1779cc49b048042e6329dac, type: 3}
       propertyPath: m_LocalPosition.x
-      value: -13.3
+      value: 4.4
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 92d79162b1779cc49b048042e6329dac, type: 3}
       propertyPath: m_LocalPosition.y
@@ -180,7 +180,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 92d79162b1779cc49b048042e6329dac, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 15.8
+      value: -2.3
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 92d79162b1779cc49b048042e6329dac, type: 3}
       propertyPath: m_LocalRotation.w

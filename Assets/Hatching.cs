@@ -151,6 +151,7 @@ public class Hatching : MonoBehaviour
 
         contour.init(myCamera);
 
+
         contour.CalcContourSegments();
 
         recalculateCrossfields();
@@ -292,7 +293,7 @@ public class Hatching : MonoBehaviour
     void recalculateHatching()
     {
         contour.CalcContourSegments();
-        directionSnapShot.takeSnapshot();
+        /*directionSnapShot.takeSnapshot();
 
 
         MeshRenderer mr = gameObject.GetComponent<MeshRenderer>();
@@ -304,11 +305,12 @@ public class Hatching : MonoBehaviour
         mr.material = oldMat;
 
         generateCrosshatch.generateHatches();
+        */
         customLinerenderer.mf.mesh = generateCrosshatch.generateMixedLineMesh();
 
         customLinerenderer.transform.position = myCamera.ViewportToWorldPoint(new Vector3(0.5f, 0.5f, (myCamera.nearClipPlane + myCamera.farClipPlane) / 2f));
         //lineRendererGenerator.updateLineRenderers(generateCrosshatch.generateLinerendererPoints());	
-
+        
     }
 
     void recalculateCrossfields()
@@ -324,11 +326,11 @@ public class Hatching : MonoBehaviour
 
     void recalculateReduceHatching()
     {
-        generateCrosshatch.reduceHatches();
+        //generateCrosshatch.reduceHatches();
 
-        customLinerenderer.mf.mesh = generateCrosshatch.generateMixedLineMesh();
+        //customLinerenderer.mf.mesh = generateCrosshatch.generateMixedLineMesh();
 
-        customLinerenderer.transform.position = myCamera.ViewportToWorldPoint(new Vector3(0.5f, 0.5f, (myCamera.nearClipPlane + myCamera.farClipPlane) / 2f));
+        //customLinerenderer.transform.position = myCamera.ViewportToWorldPoint(new Vector3(0.5f, 0.5f, (myCamera.nearClipPlane + myCamera.farClipPlane) / 2f));
     }
 
 }

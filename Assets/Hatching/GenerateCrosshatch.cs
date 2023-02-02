@@ -243,7 +243,7 @@ public class GenerateCrosshatch : MonoBehaviour
 		{
 			if (node.Object != null)
 			{
-				Handles.DrawLine(node.Object.start, node.Object.end);
+				//Handles.DrawLine(node.Object.start, node.Object.end);
 			}
 		}
 
@@ -265,8 +265,8 @@ public class GenerateCrosshatch : MonoBehaviour
 				//if (!p.marked && !pLast.marked)
 				//{
 
-				if(p.testIndex!=0)
-					Handles.DrawLine(p.pos, pLast.pos);
+				//if(p.testIndex!=0)
+					//Handles.DrawLine(p.pos, pLast.pos);
 
 				//}
 
