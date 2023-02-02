@@ -413,7 +413,12 @@ namespace BentleyOttmann
 
 		}
 
-	}
+        public void sortEdgesbyLeftEndpoint()
+        {
+			//should alredy be sorted but this code is bad anymways
+            throw new NotImplementedException();
+        }
+    }
 
 }
 

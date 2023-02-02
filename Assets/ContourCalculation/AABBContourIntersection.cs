@@ -327,6 +327,12 @@ public class AABBContourIntersection :IIntersectionProvider
 
 	}
 
+    public void sortEdgesbyLeftEndpoint()
+    {
+		GraphEdges.Sort((a,b)=>GraphNodes[a.Item1].x.CompareTo(GraphNodes[b.Item1].x));
+
+
+    }
 }
 
 
