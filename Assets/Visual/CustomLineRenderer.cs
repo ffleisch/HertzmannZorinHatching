@@ -18,7 +18,7 @@ public class CustomLineRenderer : MonoBehaviour
         if (mr == null) {
             mr = gameObject.AddComponent<MeshRenderer>();
         }
-        LineMaterial = Instantiate((Material)Resources.Load("ScreenspaceLineMaterial", typeof(Material)));
+        LineMaterial = Instantiate((Material)Resources.Load("FastScreenspaceLineMaterial", typeof(Material)));
 
         mr.material = LineMaterial;
     }

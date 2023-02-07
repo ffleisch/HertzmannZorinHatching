@@ -25,6 +25,9 @@ public class Contour : MonoBehaviour
         public Vector2 end { set; get; }
 
         public int containsSegment;
+
+        public int originalTriangleIndex;
+        public Vector3 interpolatingRatios;
     }
 
     // Start is called before the first frame update
@@ -52,9 +55,11 @@ public class Contour : MonoBehaviour
     }
 
     private Camera myCamera;
-    public void init(Camera c)
+    Hatching h;
+    public void init(Hatching h, Camera c)
     {
         myCamera = c;
+        this.h = h;
         //load the compute shader
         cs = Resources.Load<ComputeShader>("ContourShader");
         kernelId = cs.FindKernel("GenerateContourSegments");
@@ -70,7 +75,6 @@ public class Contour : MonoBehaviour
         }
 
         updateMeshData();
-
     }
 
     void updateMeshData()
@@ -86,7 +90,7 @@ public class Contour : MonoBehaviour
         triBuffer = new(mf.mesh.triangles.Length, sizeof(int));
         vertBuffer = new(mf.mesh.vertices.Length, sizeof(float) * 3);
         normalBuffer = new(mf.mesh.normals.Length, sizeof(float) * 3);
-        resultBuffer = new(mf.mesh.triangles.Length / 3, sizeof(int) + sizeof(float) * (3 + 3 + 3 + 3 + 2 + 2));
+        resultBuffer = new(mf.mesh.triangles.Length / 3, sizeof(int) * (2) + sizeof(float) * (5 * 3 + 2 * 2));
 
 
         //set buffer data
@@ -181,14 +185,14 @@ public class Contour : MonoBehaviour
 
 
     /// <summary>
-    /// add a point resulting from the intersection algorithm to a list and create a corresponding raycast seed
+    ///  create a corresponding raycast seed
     /// for this the original segment on which the point lies is used
     /// the normals and 3d positions are interpolated accoringly
     /// </summary>
     /// <param name="list"></param>
     /// <param name="point"></param>
     /// <param name="ogSegmentIndex"></param>
-    void addToList(List<(int, RaycastSeed)> list, int point, int ogSegmentIndex)
+    RaycastSeed createRaycastSeed(int point, int ogSegmentIndex)
     {
 
         ResultBufferStruct ogSegment = rawContourSegments[ogSegmentIndex];
@@ -225,7 +229,7 @@ public class Contour : MonoBehaviour
         }
         RaycastSeed seed = new(pos, normal, this);
         seed.ogIndex = ogSegmentIndex;
-        list.Add((point, seed));
+        return seed;
     }
 
 
@@ -254,7 +258,69 @@ public class Contour : MonoBehaviour
 
         //filter the triangles whicvh did not contain a contour segment
         //could be done faster on the gpu
-        rawContourSegments = results.Where(x => x.containsSegment != 0).ToList();
+        rawContourSegments = results.Where(x => x.containsSegment != 0).ToArray();
+
+
+        var triangles = mf.mesh.triangles;
+        var vertices = mf.mesh.vertices;
+        Vector3 c = transform.InverseTransformPoint(myCamera.transform.position);
+        for (int i = 0; i < rawContourSegments.Length; i++)
+        {
+            var s = rawContourSegments[i];
+            int i1 = triangles[s.originalTriangleIndex * 3 + 0];
+            int i2 = triangles[s.originalTriangleIndex * 3 + 1];
+            int i3 = triangles[s.originalTriangleIndex * 3 + 2];
+            float ratio1 = s.interpolatingRatios.x;
+            float ratio2 = s.interpolatingRatios.y;
+            int ratioCode = (int)s.interpolatingRatios.z;
+
+            Vector3 v1 = c - vertices[i1];
+            float c1 = h.k1[i1] * Mathf.Pow(Vector3.Dot(v1, h.e1[i1]), 2) + h.k2[i1] * Mathf.Pow(Vector3.Dot(v1, h.e2[i1]), 2);
+
+            Vector3 v2 = c - vertices[i2];
+            float c2 = h.k1[i2] * Mathf.Pow(Vector3.Dot(v2, h.e1[i2]), 2) + h.k2[i2] * Mathf.Pow(Vector3.Dot(v2, h.e2[i2]), 2);
+
+            Vector3 v3 = c - vertices[i3];
+            float c3 = h.k1[i3] * Mathf.Pow(Vector3.Dot(v3, h.e1[i3]), 2) + h.k2[i3] * Mathf.Pow(Vector3.Dot(v3, h.e2[i3]), 2);
+
+            float cf1 = 0, cf2 = 0;
+
+            if (ratioCode % 8 == 3)
+            {//if (((ratioCode & 1) != 0)&&((ratioCode & 2) != 0)) {
+                cf1 = Mathf.Lerp(c1, c2, ratio1);
+                cf2 = Mathf.Lerp(c1, c3, ratio2);
+
+                //rawContourSegments[i].objectStart = Vector3.Lerp(vertices[i1],vertices[i2],ratio1);
+                //rawContourSegments[i].objectEnd= Vector3.Lerp(vertices[i1],vertices[i3],ratio2);
+            }
+
+            if (ratioCode % 8 == 6)
+            {//if (((ratioCode & 2) != 0)&&((ratioCode & 4) != 0)) {
+                cf1 = Mathf.Lerp(c1, c3, ratio1);
+                cf2 = Mathf.Lerp(c2, c3, ratio2);
+
+                //rawContourSegments[i].objectStart = Vector3.Lerp(vertices[i1],vertices[i3],ratio1);
+                //rawContourSegments[i].objectEnd= Vector3.Lerp(vertices[i2],vertices[i3],ratio2);
+            }
+
+            if (ratioCode % 8 == 5)
+            {//if (((ratioCode & 1) != 0)&&((ratioCode & 4) != 0)) {
+                cf1 = Mathf.Lerp(c1, c2, ratio1);
+                cf2 = Mathf.Lerp(c2, c3, ratio2);
+                //rawContourSegments[i].objectStart = Vector3.Lerp(vertices[i1],vertices[i2],ratio1);
+                //rawContourSegments[i].objectEnd= Vector3.Lerp(vertices[i2],vertices[i3],ratio2);
+            }
+            if (cf1 * cf2 < 0)
+            {
+                //Debug.Log("Cusp detected");
+                ratioCode |= 8;
+            }
+            rawContourSegments[i].interpolatingRatios = new Vector3(ratio1, ratio2, ratioCode);
+        }
+
+
+
+
 
         intersections = new AABBContourIntersection(rawContourSegments.Cast<ISegment>());
         //intersections = new BentleyOttmann.BentleyOttman(rawContourSegments.Cast<ISegment>());
@@ -276,20 +342,191 @@ public class Contour : MonoBehaviour
 
 
 
-        Dictionary<int, List<(int, RaycastSeed)>> openLists = new();
-        HashSet<int> burned = new();
-        HashSet<int> twiceBurned = new();
-        outline = new();
         int num = 0;
 
 
         //maybe sort the segments by theor left endpoint
-        intersections.sortEdgesbyLeftEndpoint();
+        //intersections.sortEdgesbyLeftEndpoint();
+
+        int[] connectedCount = new int[intersections.GraphNodes.Count];
+        foreach ((var s, var e, var o) in intersections.GraphEdges)
+        {
+            connectedCount[s]++;
+            connectedCount[e]++;
+        }
+
+        foreach ((var s, var e, var o) in intersections.GraphEdges){
+            if ((((int)rawContourSegments[o].interpolatingRatios.z)&8)!=0) {
+                if (intersections.GraphNodes[s]==rawContourSegments[o].start) {
+                    connectedCount[s] = 1;
+                    //Debug.Log("Snip snpip");
+                }
+                if (intersections.GraphNodes[e]==rawContourSegments[o].start) {
+                    connectedCount[e] = 1;
+                    //Debug.Log("Snip snpip 2");
+                }
+
+            }
+        }
+            
         
 
+
+        var test = connectedCount.Where<int>(x => x != 2);
+
+        outline = new();
+
+
+
+
+
+        List<LinkedList<(int, RaycastSeed)>> openLists = new();
+
+        Dictionary<int, LinkedList<(int, RaycastSeed)>> lineEnds = new();
+
+        foreach ((int s, int e, int ind) in intersections.GraphEdges)
+        {
+            bool startContained = lineEnds.ContainsKey(s);
+            bool endContained = lineEnds.ContainsKey(e);
+
+
+            //there is no list ending or starting in s or e
+            if (!startContained && !endContained)
+            {
+
+                openLists.Add(new());
+                var newList = openLists.Last();
+
+                newList.AddLast((s, createRaycastSeed(s, ind)));
+                newList.AddLast((e, createRaycastSeed(e, ind)));
+
+                if (connectedCount[s] == 2)
+                {
+                    lineEnds.Add(s, newList);
+                }
+                if (connectedCount[e] == 2)
+                {
+                    lineEnds.Add(e, newList);
+                }
+            }
+
+            if (startContained && !endContained)
+            {
+                var myList = lineEnds[s];
+                if (myList.First.Value.Item1 == s)
+                {
+                    myList.AddFirst((e, createRaycastSeed(e, ind)));
+                }
+                else
+                {
+                    myList.AddLast((e, createRaycastSeed(e, ind)));
+                }
+                lineEnds.Remove(s);
+                if (connectedCount[e] == 2)
+                {
+                    lineEnds.Add(e, myList);
+                }
+            }
+            if (!startContained && endContained)
+            {
+                var myList = lineEnds[e];
+                if (myList.First.Value.Item1 == e)
+                {
+                    myList.AddFirst((s, createRaycastSeed(s, ind)));
+                }
+                else
+                {
+                    myList.AddLast((s, createRaycastSeed(s, ind)));
+                }
+                lineEnds.Remove(e);
+                if (connectedCount[s] == 2)
+                {
+                    lineEnds.Add(s, myList);
+                }
+
+            }
+
+            if (startContained && endContained)
+            {
+                var sList = lineEnds[s];
+                var eList = lineEnds[e];
+                lineEnds.Remove(s);
+                lineEnds.Remove(e);
+                openLists.Remove(sList);
+                openLists.Remove(eList);
+
+
+                IEnumerable<(int, RaycastSeed)> newListEnum;
+
+                if (sList.First.Value.Item1 == s || sList.First.Value.Item1 == e)
+                {
+                    newListEnum = sList.Reverse();
+                }
+                else
+                {
+                    newListEnum = sList;
+                }
+
+                if (eList.First.Value.Item1 == s || eList.First.Value.Item1 == e)
+                {
+                    newListEnum = newListEnum.Concat(eList);
+                }
+                else
+                {
+                    newListEnum = newListEnum.Concat(eList.Reverse());
+                }
+                LinkedList<(int, RaycastSeed)> newList = new(newListEnum);
+
+
+                var newListFirstPointIndex = newList.First.Value.Item1;
+                if (connectedCount[newListFirstPointIndex] == 2)
+                {
+                    if (!lineEnds.ContainsKey(newListFirstPointIndex))
+                    {
+                        lineEnds.Add(newListFirstPointIndex, newList);
+                    }
+                    else
+                    {
+                        lineEnds[newListFirstPointIndex] = newList;
+                    }
+                }
+                var newListLastPointIndex = newList.Last.Value.Item1;
+                if (connectedCount[newListLastPointIndex] == 2)
+                {
+                    if (!lineEnds.ContainsKey(newListLastPointIndex))
+                    {
+                        lineEnds.Add(newListLastPointIndex, newList);
+                    }
+                    else
+                    {
+                        lineEnds[newListLastPointIndex] = newList;
+                    }
+                }
+
+
+
+                openLists.Add(newList);
+
+            }
+
+
+
+        }
+
+        foreach (var l in openLists)
+        {
+            outline.Add(l.ToList());
+        }
+
+
+        #region old line creation
+        /*
         //keep a dictionary to track which lines are growing form the left
         //if a segments statrpoint is contained, remove it and add its endpoint and add it to the associated list
         //if two lists end in the same point (i.e. a crossing), instaed start a new list
+        Dictionary<int, List<(int, RaycastSeed)>> openLists = new();
+        HashSet<int> burned = new();
+        HashSet<int> twiceBurned = new();
         foreach ((int s, int e, int ind) in intersections.GraphEdges)
         {
             if (openLists.ContainsKey(s) && (!burned.Contains(s)))
@@ -372,8 +609,8 @@ public class Contour : MonoBehaviour
                     lineEnds[lastPointindex] = l;
                 }
             }
-        }
-
+        }*/
+        #endregion
 
 
         //remove hidden lines
@@ -422,7 +659,7 @@ public class Contour : MonoBehaviour
 
 
     List<float> visRatios;
-    private List<ResultBufferStruct> rawContourSegments;
+    private ResultBufferStruct[] rawContourSegments;
 
     private List<List<(int, RaycastSeed)>> outline = new();
 
@@ -493,7 +730,7 @@ public class Contour : MonoBehaviour
 
     }
 
-    [Range(0,100)]
+    [Range(0, 100)]
     public int outlineHighlighted;
 
     //Debug.Log(myCamera.ScreenToViewportPoint(new Vector2(myCamera.pixelHeight,myCamera.pixelWidth)));
@@ -550,7 +787,7 @@ public class Contour : MonoBehaviour
                 int lastIndex = 0;
                 foreach ((int ind, RaycastSeed s) in l)
                 {
-                    //Handles.color = Color.HSVToRGB(((1 + i) % 10) / 10f, 1, 1);
+                    Handles.color = Color.HSVToRGB(((1 + i) % 10) / 10f, 1, 1);
                     //Handles.color = Color.HSVToRGB(visRatios[i], 1, 1);
                     //Handles.color = new Color(visRatios[i],visRatios[i],visRatios[i]);
                     /*Handles.matrix = transform.localToWorldMatrix;
@@ -563,7 +800,7 @@ public class Contour : MonoBehaviour
                     {
                         firstLoop = false; lastIndex = ind; continue;
                     }
-                    //Handles.DrawLine(intersections.GraphNodes[lastIndex], intersections.GraphNodes[ind],2);
+                    Handles.DrawLine(intersections.GraphNodes[lastIndex], intersections.GraphNodes[ind],2);
                     lastIndex = ind;
 
 
@@ -571,17 +808,29 @@ public class Contour : MonoBehaviour
                 }
                 i += 1;
             }
-
+            
+            
             int n = 0;
-            Handles.color = Color.black;
+            Handles.matrix = transform.localToWorldMatrix;
+            var test = rawContourSegments.Select(x => x.interpolatingRatios.z);
             foreach (var s in rawContourSegments)
             {
+                if ((((int)s.interpolatingRatios.z) & 8) != 0)
+                {
+                    Handles.color = Color.red;
+                    Handles.DrawLine(s.objectStart, s.objectEnd, 2);
+                }
+                else
+                {
+                    Handles.color = Color.black;
+                    Handles.DrawLine(s.objectStart, s.objectEnd, 2);
 
+                }
                 //Handles.color = Color.HSVToRGB(((1 + n) % 10) / 10f, 1, 1);
-                //Handles.DrawLine(s.objectStart, s.objectEnd,2);
                 //n++;	
             }
-            /*
+
+            
             int n_l = 0;
             foreach (var l in outline)
             {
@@ -609,11 +858,11 @@ public class Contour : MonoBehaviour
 
                     Handles.color = Color.HSVToRGB(((1 + n_l) % 10) / 10f, 1, 1);
                     bool visible = rcs.testVisibility(myCamera);
-                    Handles.color = visible ?Color.red:Color.blue;
+                    Handles.color = visible ? Color.red : Color.blue;
                     nVis += visible ? 1 : 0;
                     Handles.DrawWireDisc(rcs.position, rcs.normal, rayCastStandoff * 2);
                     Handles.DrawLine(rcs.position, rcs.position + rayCastStandoff * rcs.normal);
-                    Handles.DrawLine(og.objectStart, og.objectEnd,3);
+                    Handles.DrawLine(og.objectStart, og.objectEnd, 3);
 
                     Handles.matrix = Matrix4x4.identity;
                     //Handles.DrawLine(transform.TransformPoint( rcs.position+rayCastStandoff*rcs.normal), myCamera.transform.position);
@@ -621,7 +870,7 @@ public class Contour : MonoBehaviour
                 }
                 n_l++;
                 //Debug.Log(l.Count + " " + ((float)nVis / l.Count));
-            }*/
+            }
 
 
 
@@ -635,7 +884,7 @@ public class Contour : MonoBehaviour
 
 
 
-
+            /*
             int num = 0;
             foreach ((int s, int e,_) in intersections.GraphEdges) {
                 //Handles.color = Color.HSVToRGB(((1 + num) % 5) / 5f, 1, 1);
@@ -646,7 +895,7 @@ public class Contour : MonoBehaviour
 
                 }
                 num++;
-            }
+            }*/
 
             /*foreach (var l in outline)
             {

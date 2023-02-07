@@ -9,6 +9,8 @@ struct resultBufferStructure {
 	float2 screenStart;
 	float2 screenEnd;
 	int containsSegment;
+    int originalTriangleIndex;
+    float3 interpolatingRatios;
 
 };
 
@@ -51,18 +53,16 @@ void GenerateContourSegments(uint3 id : SV_DispatchThreadID)
 
 
 		results[id.x].containsSegment = 0;
+		results[id.x].originalTriangleIndex = id.x;
+		float3 ratioVector=float3(0,0,0);
 		int n = 0;
 		if (dot1 * dot2 < 0) {
 			results[id.x].containsSegment = 1;
 			float ratio = dot1 / (dot1 - dot2);
-			if (n == 0) {
-				results[id.x].objectStart = ratio * p2 + (1 - ratio) * p1;
-				results[id.x].normalStart = ratio * n2 + (1 - ratio) * n1;
-			}
-			else {
-				results[id.x].objectEnd = ratio * p2 + (1 - ratio) * p1;
-				results[id.x].normalEnd = ratio * n2 + (1 - ratio) * n1;
-			}
+			results[id.x].objectStart = ratio * p2 + (1 - ratio) * p1;
+			results[id.x].normalStart = ratio * n2 + (1 - ratio) * n1;
+			ratioVector.x = ratio;
+			ratioVector.z += 1;
 			n++;
 		}
 
@@ -72,28 +72,27 @@ void GenerateContourSegments(uint3 id : SV_DispatchThreadID)
 			if (n == 0) {
 				results[id.x].objectStart = ratio * p3 + (1 - ratio) * p1;
 				results[id.x].normalStart = ratio * n3 + (1 - ratio) * n1;
+				ratioVector.x = ratio;
 			}
 			else {
 				results[id.x].objectEnd = ratio * p3 + (1 - ratio) * p1;
 				results[id.x].normalEnd = ratio * n3 + (1 - ratio) * n1;
+				ratioVector.y = ratio;
 			}
+			ratioVector.z += 2;
 			n++;
 		}
 
 		if (dot2 * dot3 < 0) {
 			results[id.x].containsSegment = 1;
 			float ratio = dot2 / (dot2 - dot3);
-			if (n == 0) {
-				results[id.x].objectStart = ratio * p3 + (1 - ratio) * p2;
-				results[id.x].normalStart = ratio * n3 + (1 - ratio) * n2;
-			}
-			else {
-				results[id.x].objectEnd = ratio * p3 + (1 - ratio) * p2;
-				results[id.x].normalEnd = ratio * n3 + (1 - ratio) * n2;
-			}
+			results[id.x].objectEnd = ratio * p3 + (1 - ratio) * p2;
+			results[id.x].normalEnd = ratio * n3 + (1 - ratio) * n2;
+			ratioVector.y = ratio;
+			ratioVector.z += 4;
 			n++;
 		}
-		
+		results[id.x].interpolatingRatios = ratioVector;
 		if (n == 2) {
 			//homogenus coordinates
 			float4 p1=float4(results[id.x].objectStart,1);
