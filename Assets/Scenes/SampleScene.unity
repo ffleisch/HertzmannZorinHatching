@@ -158,6 +158,7 @@ MonoBehaviour:
   lowerLimit: 0.827
   upperLimit: 0.713
   lineWidth: 1.7
+  lineWidthContourRatio: 1
   renderLayer: 5
 --- !u!1001 &348551640
 PrefabInstance:
@@ -262,7 +263,8 @@ MonoBehaviour:
   dTest: 0.5
   lowerLimit: 0.65
   upperLimit: 0.95
-  lineWidth: 8.2
+  lineWidth: 2.2
+  lineWidthContourRatio: 1
   renderLayer: 6
 --- !u!1 &705507993
 GameObject:

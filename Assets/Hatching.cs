@@ -78,8 +78,15 @@ public class Hatching : MonoBehaviour
     public float upperLimit = 0.95f;
     private float _upperLimit;
 
+
     [Range(0, 50)]
     public float lineWidth = 8;
+    
+    
+    
+    public float lineWidthContourRatio = 1;
+    private float _lineWidthConturRatio;
+    
     //public LineRenderer lineRenderer;
     //public GameObject lineRendererPrefab;
 
@@ -260,6 +267,12 @@ public class Hatching : MonoBehaviour
             brightnessSnapshot.shader = brightnessMaterial.shader;
             brightnessSnapshot.takeSnapshot();
 
+        }
+
+
+        if (_lineWidthConturRatio != lineWidthContourRatio) {
+            _lineWidthConturRatio = lineWidthContourRatio;
+            doRecalculateHatchReduction = true;
         }
 
         Vector2 currentReesolution =new Vector2(myCamera.pixelWidth,myCamera.pixelHeight);

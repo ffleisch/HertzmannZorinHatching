@@ -699,7 +699,7 @@ public class Contour : MonoBehaviour
 
 
                 Vector3 point = intersections.GraphNodes[p.Item1];
-                vertices.Add(new Vector3(2f * (point.x / w) - 1, 1 - 2f * (point.y / h), 1));
+                vertices.Add(new Vector3(2f * (point.x / w) - 1, 1 - 2f * (point.y / h), this.h.lineWidthContourRatio));
                 lastIndex = p.Item1;
                 i++;
             }//todo teilweise sehr hacky
